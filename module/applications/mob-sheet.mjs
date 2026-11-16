@@ -31,12 +31,9 @@ export default class MobSheet extends DCCCreatureSheet {
     notes: { template: path('actor/mob/notes.hbs'), templates: [ACTOR_PARTIALS.richFields] },
   };
 
-  /**
-   * Inventory contains gear only (weapons are listed under Attacks).
-   * @inheritDoc
-   */
+  /** @inheritDoc */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
-    return Object.assign(context, { inventory: inventoryView({ gear: this.document.itemTypes.gear }).inventory });
+    return Object.assign(context, { inventory: inventoryView(this.document.itemTypes).inventory });
   }
 }
