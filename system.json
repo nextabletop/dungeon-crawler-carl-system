@@ -2,7 +2,7 @@
   "id": "dungeon-crawler-carl",
   "title": "Dungeon Crawler Carl",
   "description": "Dungeon Crawler Carl Roleplaying Game system.",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "download": "https://github.com/nextabletop/foundry-dungeon-crawler-carl/releases/latest/download/dungeon-crawler-carl.zip",
   "compatibility": { "minimum": "14", "verified": "14" },
   "authors": [{ "name": "NexTabletop" }],
