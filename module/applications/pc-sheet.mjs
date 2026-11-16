@@ -2,6 +2,7 @@ import DCCCreatureSheet from './creature-sheet.mjs';
 import { ACTOR_PARTIALS, templatePath as path, runGuarded, confirmYesNo } from './actor-sheet-base.mjs';
 import { inventoryView, hotlistCells, advancementView, singleFlight } from './sheet-rows.mjs';
 import { ITEM_SLOTS, HOTLIST_CAP, ACCESSORY_CAP, APP_CLASSES } from '../config.mjs';
+import { dropRace, dropClass } from '../rules/race.mjs';
 
 /** Inventory slot <select> choices: value -> label key. */
 const SLOT_OPTIONS = Object.freeze(Object.fromEntries(ITEM_SLOTS.map(s => [s, `DCC.Slot.${s}`])));
@@ -79,6 +80,76 @@ export default class PcSheet extends DCCCreatureSheet {
     ...TAB_PARTS,
     hotlist: { template: path('actor/pc/hotlist.hbs') },
   };
+
+  async _onDropItem(event, item) {
+    if (!['race', 'class'].includes(item?.type)) return super._onDropItem(event, item);
+    if (!this.isEditable || !this.actor.isOwner) return null;
+    await runGuarded(async () => {
+      if (!(await this._flushForm())) return;
+      const isRace = item.type === 'race';
+      const category = isRace ? 'Race' : 'Class';
+      await (isRace ? dropRace : dropClass)(this.actor, item, {
+        packs: game.packs,
+        confirmReplace: () => confirmYesNo(`DCC.${category}.ReplaceTitle`,
+          foundry.utils.escapeHTML(game.i18n.format(isRace && item.system.inheritRace
+            ? 'DCC.Race.InheritMessage' : `DCC.${category}.ReplaceMessage`, {
+            current: this.actor.system[item.type] || game.i18n.localize(`DCC.${category}.Existing`),
+            next: item.name,
+          }))),
+        choose: choices => PcSheet.#chooseBenefits(choices, category),
+      });
+    });
+    return null;
+  }
+
+  static async #chooseBenefits(choices, category) {
+    const escape = foundry.utils.escapeHTML;
+    const content = choices.map((choice, index) => choice.kind === 'allocation' ? `
+      <fieldset>
+        <legend>${escape(choice.label)} (${choice.count})</legend>
+        ${choice.options.map((option, optionIndex) => `
+          <div class="form-group">
+            <label for="dcc-race-choice-${index}-${optionIndex}">${escape(option.label)}</label>
+            <input id="dcc-race-choice-${index}-${optionIndex}" name="choice-${index}-${optionIndex}"
+                   type="number" min="0" max="${choice.count}" step="1" value="0">
+          </div>`).join('')}
+      </fieldset>` : `
+      <div class="form-group">
+        <label for="dcc-race-choice-${index}">${escape(choice.label)} (${choice.count})</label>
+        <select id="dcc-race-choice-${index}" name="choice-${index}" ${choice.count > 1 ? 'multiple' : ''}>
+          ${choice.count === 1 ? '<option value="" selected disabled>—</option>' : ''}
+          ${choice.options.map((option, optionIndex) => `<option value="${optionIndex}">${escape(option.label)}</option>`).join('')}
+        </select>
+      </div>`).join('');
+    while (true) {
+      const selections = await foundry.applications.api.DialogV2.wait({
+        window: { title: game.i18n.localize(`DCC.${category}.ChoiceTitle`) },
+        content,
+        buttons: [
+          {
+            action: 'apply', label: game.i18n.localize(`DCC.${category}.Apply`),
+            callback: (_event, button) => choices.map((choice, index) => choice.kind === 'allocation'
+              ? choice.options.map((_option, optionIndex) => {
+                const field = button.form.elements.namedItem(`choice-${index}-${optionIndex}`);
+                return field.value === '' ? NaN : Number(field.value);
+              })
+              : Array.from(button.form.elements.namedItem(`choice-${index}`).selectedOptions)
+                .filter(option => option.value !== '').map(option => Number(option.value))),
+          },
+          { action: 'cancel', label: game.i18n.localize('DCC.Inventory.Cancel') },
+        ],
+        classes: [...APP_CLASSES],
+        rejectClose: false,
+        modal: true,
+      });
+      if (selections === null || selections === 'cancel') return null;
+      if (selections.every((selected, index) => choices[index].kind === 'allocation'
+        ? selected.every(value => Number.isInteger(value) && value >= 0)
+          && selected.reduce((sum, value) => sum + value, 0) === choices[index].count
+        : selected.length === choices[index].count)) return selections;
+      ui.notifications.warn(game.i18n.localize(`DCC.${category}.ChoiceRequired`));
+    }
+  }
 
   /**
    * Inventory tab (paper doll, accessories, gear + weapon list) and the

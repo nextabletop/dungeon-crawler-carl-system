@@ -158,6 +158,16 @@ describe('Attack source links', () => {
 });
 
 describe('granted Attacks', () => {
+  it('lets a Race application manage Attack creation synchronously', async () => {
+    const source = new DCCItem({
+      id: 'source', type: 'skill', name: 'Bow',
+      system: { rank: 0, isAttack: true, linkedItemIds: [] },
+    });
+    const actor = actorWith(source);
+    await source._onCreate({}, { dccSkipGrantedAttack: true }, undefined);
+    expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+  });
+
   it('creates and links one Attack from an owned Skill/Spell, idempotently', async () => {
     const source = item('spell', 'spell', [], { stat: 'intelligence', rank: 3, isAttack: true });
     source.name = 'Magic Missile';

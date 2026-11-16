@@ -83,7 +83,7 @@ export default class DCCActorSheetBase extends HandlebarsApplicationMixin(foundr
   static RICH_TEXT_PARTS = {};
 
   /** Item types this sheet's actor may own (default: every item type). Subclasses narrow it. */
-  static ALLOWED_ITEM_TYPES = Object.keys(itemModels);
+  static ALLOWED_ITEM_TYPES = Object.keys(itemModels).filter(type => !['race', 'class'].includes(type));
 
   /** In-flight inline item updates (each settles without rejecting); see _settleInlineEdits. */
   #inlineEdits = new Set();

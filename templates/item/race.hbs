@@ -1,0 +1,9 @@
+<section class="dcc-item-body">
+  {{> "systems/dungeon-crawler-carl/templates/item/partials/header.hbs"}}
+  <div class="dcc-box dcc-item-section">
+    <div class="dcc-item-grid">
+      {{formGroup systemFields.size value=systemSource.size rootId=rootId}}
+    </div>
+  </div>
+  {{> "systems/dungeon-crawler-carl/templates/item/partials/description.hbs"}}
+</section>

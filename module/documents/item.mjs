@@ -11,6 +11,7 @@ export default class DCCItem extends foundry.documents.Item {
     await super._onCreate?.(data, options, userId);
     if (userId && userId !== game.user.id) return;
     if (!this.parent?.items) return;
+    if (options.dccSkipGrantedAttack) return;
     if (['skill', 'spell'].includes(this.type) && this.system.isAttack) await createGrantedAttack(this);
   }
 

@@ -5,14 +5,16 @@ vi.mock('../../module/applications/sheet-config.mjs', () => ({ default: class {}
 vi.mock('../../module/applications/creature-sheet.mjs', async () => ({
   default: (await import('../../module/applications/actor-sheet-base.mjs')).default,
 }));
+vi.mock('../../module/rules/race.mjs', () => ({ dropRace: vi.fn(), dropClass: vi.fn() }));
 
 foundry.applications.api = { HandlebarsApplicationMixin: base => base, DialogV2: { wait: vi.fn() } };
 foundry.applications.sheets = { ActorSheet: class {} };
 foundry.utils.escapeHTML = text => text.replaceAll('<', '&lt;');
-globalThis.ui = { notifications: { error: vi.fn() } };
+globalThis.ui = { notifications: { error: vi.fn(), warn: vi.fn() } };
 
 const { default: PcSheet } = await import('../../module/applications/pc-sheet.mjs');
 const { default: ActorSheetBase } = await import('../../module/applications/actor-sheet-base.mjs');
+const { dropRace, dropClass } = await import('../../module/rules/race.mjs');
 const chooseItem = PcSheet.DEFAULT_OPTIONS.actions.createInventoryItem;
 const createItem = ActorSheetBase.DEFAULT_OPTIONS.actions.createItem;
 const chooseSkillOrSpell = PcSheet.DEFAULT_OPTIONS.actions.createSkillOrSpell;
@@ -23,6 +25,90 @@ const makeSheet = () => {
   sheet.document = { createEmbeddedDocuments: vi.fn() };
   return sheet;
 };
+
+describe('Crawler Race drop', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('flushes the sheet and passes a choice dialog to the Race handler', async () => {
+    const sheet = makeSheet();
+    sheet.actor = { isOwner: true };
+    sheet._flushForm = vi.fn(async () => true);
+    const item = { type: 'race', name: 'Test' };
+    foundry.applications.api.DialogV2.wait.mockImplementation(async dialog => (
+      dialog.buttons[0].callback(null, {
+        form: { elements: { namedItem: () => ({ selectedOptions: [{ value: '1' }] }) } },
+      })
+    ));
+    dropRace.mockImplementation(async (_actor, _item, handlers) => {
+      const selected = await handlers.choose([{
+        label: 'Choose', count: 1, options: [{ label: 'A' }, { label: 'B' }],
+      }]);
+      expect(selected).toEqual([[1]]);
+    });
+
+    await sheet._onDropItem({}, item);
+    expect(sheet._flushForm).toHaveBeenCalledOnce();
+    expect(dropRace).toHaveBeenCalledWith(sheet.actor, item, expect.any(Object));
+    expect(ui.notifications.error).not.toHaveBeenCalled();
+  });
+
+  it('does not apply a Race if saving pending edits fails', async () => {
+    const sheet = makeSheet();
+    sheet.actor = { isOwner: true };
+    sheet._flushForm = vi.fn(async () => false);
+    await sheet._onDropItem({}, { type: 'race' });
+    expect(dropRace).not.toHaveBeenCalled();
+  });
+
+  it('treats the Race choice dialog cancel action as cancellation', async () => {
+    const sheet = makeSheet();
+    sheet.actor = { isOwner: true };
+    sheet._flushForm = vi.fn(async () => true);
+    foundry.applications.api.DialogV2.wait.mockResolvedValue('cancel');
+    dropRace.mockImplementation(async (_actor, _item, handlers) => {
+      expect(await handlers.choose([{
+        label: 'Choose', count: 1, options: [{ label: 'A' }],
+      }])).toBeNull();
+    });
+    await sheet._onDropItem({}, { type: 'race' });
+    expect(ui.notifications.error).not.toHaveBeenCalled();
+  });
+
+  it('collects a valid Stat allocation from the Race choice dialog', async () => {
+    const sheet = makeSheet();
+    sheet.actor = { isOwner: true };
+    sheet._flushForm = vi.fn(async () => true);
+    const values = ['4', '2', '0'];
+    foundry.applications.api.DialogV2.wait.mockImplementation(async dialog => (
+      dialog.buttons[0].callback(null, {
+        form: { elements: { namedItem: name => ({ value: values[Number(name.at(-1))] }) } },
+      })
+    ));
+    dropRace.mockImplementation(async (_actor, _item, handlers) => {
+      expect(await handlers.choose([{
+        kind: 'allocation', label: 'Stats', count: 6,
+        options: [{ label: 'Int' }, { label: 'Dex' }, { label: 'Cha' }],
+      }])).toEqual([[4, 2, 0]]);
+    });
+    await sheet._onDropItem({}, { type: 'race' });
+    expect(ui.notifications.error).not.toHaveBeenCalled();
+  });
+});
+
+describe('Crawler Class drop', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('flushes pending edits and invokes the Class handler', async () => {
+    const sheet = makeSheet();
+    sheet.actor = { isOwner: true };
+    sheet._flushForm = vi.fn(async () => true);
+    const item = { type: 'class', name: 'Fighter' };
+    await sheet._onDropItem({}, item);
+    expect(dropClass).toHaveBeenCalledWith(sheet.actor, item, expect.any(Object));
+    expect(dropRace).not.toHaveBeenCalled();
+    expect(ui.notifications.error).not.toHaveBeenCalled();
+  });
+});
 
 describe('Crawler combined Skill and Spell creation', () => {
   beforeEach(() => vi.clearAllMocks());

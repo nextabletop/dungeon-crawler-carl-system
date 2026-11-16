@@ -11,10 +11,29 @@
       "skill": "Skill",
       "spell": "Spell",
       "gear": "Gear",
-      "attack": "Attack"
+      "attack": "Attack",
+      "race": "Race",
+      "class": "Class"
     }
   },
   "DCC": {
+    "Race": {
+      "ReplaceTitle": "Replace Race",
+      "ReplaceMessage": "Replace {current} with {next}? Existing Skills and their base Ranks will be kept.",
+      "InheritMessage": "Change {current} to {next} and keep any existing Race Buff? Apply missing previous Race benefits manually.",
+      "Existing": "the existing Race",
+      "ChoiceTitle": "Choose Race Benefits",
+      "ChoiceRequired": "Select the requested number of benefits for each choice.",
+      "Apply": "Apply Race"
+    },
+    "Class": {
+      "ReplaceTitle": "Replace Class",
+      "ReplaceMessage": "Replace {current} with {next}? Existing Skills and Spells and their base Ranks will be kept.",
+      "Existing": "the existing Class",
+      "ChoiceTitle": "Choose Class Benefits",
+      "ChoiceRequired": "Select the requested number of benefits for each choice.",
+      "Apply": "Apply Class"
+    },
     "None": "—",
     "Sheet": {
       "pc": "DCC Crawler Sheet",
@@ -51,6 +70,9 @@
       "FIELDS": {
         "description": {
           "label": "Description"
+        },
+        "size": {
+          "label": "Size"
         },
         "upgrades": {
           "label": "Upgrades"
