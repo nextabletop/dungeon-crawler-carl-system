@@ -135,8 +135,7 @@
           "label": "Upgrades"
         },
         "onHotlist": {
-          "label": "On Hotlist",
-          "hint": "Show on the Crawler hotlist (first 10)."
+          "label": "On Hotlist"
         },
         "linkedItemIds": {
           "label": "Linked Items"
@@ -205,12 +204,11 @@
           "hint": "Set when you use this skill."
         },
         "enabled": {
-          "label": "Enabled",
-          "hint": "This item's modifiers apply."
+          "label": "Enable Modifiers",
+          "hint": ""
         },
         "isAttack": {
-          "label": "Attack",
-          "hint": "Create a linked Attack when this Skill or Spell is owned by an Actor."
+          "label": "Attack"
         },
         "checkType": {
           "label": "Check"
