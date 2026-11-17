@@ -3,6 +3,7 @@ import { ACTOR_PARTIALS, templatePath as path, runGuarded, confirmYesNo } from '
 import { inventoryView, hotlistCells, advancementView, singleFlight } from './sheet-rows.mjs';
 import { ITEM_SLOTS, HOTLIST_CAP, ACCESSORY_CAP, APP_CLASSES } from '../config.mjs';
 import { dropRace, dropClass } from '../rules/race.mjs';
+import { skillPotionBonus } from '../rules/skill-potion.mjs';
 
 /** Inventory slot <select> choices: value -> label key. */
 const SLOT_OPTIONS = Object.freeze(Object.fromEntries(ITEM_SLOTS.map(s => [s, `DCC.Slot.${s}`])));
@@ -241,7 +242,9 @@ export default class PcSheet extends DCCCreatureSheet {
    */
   static async #onUseHotlist(_event, target) {
     const item = this._itemFromTarget(target);
-    if (!item || !(await this._flushForm())) return;
+    if (!item) return;
+    if (skillPotionBonus(item) !== undefined) return this._useSkillPotion(item);
+    if (!(await this._flushForm())) return;
     await this.document.useHotlistItem(item);
   }
 

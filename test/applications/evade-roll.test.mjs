@@ -23,6 +23,23 @@ describe('Crawler Evade sheet action', () => {
     }, { roll: formula });
   });
 
+  describe('Gear-linked Buff actions', () => {
+    it('resolves actor and item effects separately, even when their IDs match', async () => {
+      const actorEffect = { id: 'same', disabled: false };
+      const itemEffect = { id: 'same', disabled: false, update: vi.fn() };
+      const sheet = new DCCCreatureSheet();
+      sheet.document = {
+        effects: new Map([['same', actorEffect]]),
+        items: new Map([['armor', { effects: new Map([['same', itemEffect]]) }]]),
+      };
+      const target = itemId => ({ closest: () => ({ dataset: { effectId: 'same', itemId } }) });
+      expect(sheet._effectFromTarget(target(undefined))).toBe(actorEffect);
+      expect(sheet._effectFromTarget(target('armor'))).toBe(itemEffect);
+      await DCCCreatureSheet.DEFAULT_OPTIONS.actions.toggleEffect.call(sheet, null, target('armor'));
+      expect(itemEffect.update).toHaveBeenCalledWith({ disabled: true });
+    });
+  });
+
   it('does not roll if saving pending edits fails', async () => {
     postCard.mockClear();
     const sheet = { document: { system: { evade: 4, evadeDice: '+1d4' } }, _flushForm: vi.fn(async () => false) };

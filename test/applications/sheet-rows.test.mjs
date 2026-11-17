@@ -949,6 +949,19 @@ describe('buffRows', () => {
     expect(rows.map(r => r.id)).toEqual(['a', 'b']);
     expect(rows[1]).toMatchObject({ disabled: false, changes: 'strength 2' });
   });
+  it('shows only flagged item Buffs, preserving their item identity and suppression state', () => {
+    const item = { id: 'armor', effects: { contents: [
+      { id: 'bonus', name: 'Bonuses', flags: {}, system: { changes: [] } },
+      { id: 'resist', name: 'Resistance to Ice', isSuppressed: true,
+        flags: { 'dungeon-crawler-carl': { showInBuffs: true } }, system: { changes: [] } },
+    ] } };
+    const rows = buffRows([{ id: 'actor', name: 'Actor Buff' }], [item]);
+    expect(rows).toHaveLength(2);
+    expect(rows.find(row => row.id === 'resist')).toMatchObject({
+      itemId: 'armor', rowId: 'armor-resist', suppressed: true,
+    });
+    expect(rows.find(row => row.id === 'actor').itemId).toBeUndefined();
+  });
 });
 
 // Minimal owned-item stand-in: prepared `system` with `_source` = the stored values.

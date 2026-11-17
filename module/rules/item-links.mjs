@@ -1,7 +1,8 @@
-import { DEFAULT_ITEM_ICONS } from '../config.mjs';
+import { DEFAULT_ITEM_ICONS, SYSTEM_ID } from '../config.mjs';
 
 const LINKABLE_TYPES = new Set(['attack', 'gear', 'skill', 'spell', 'weapon']);
 const RANK_SOURCE_TYPES = new Set(['skill', 'spell']);
+const GRANT_SOURCE_TYPES = new Set([...RANK_SOURCE_TYPES, 'gear']);
 
 const itemArray = items => Array.from(items?.contents ?? items ?? []);
 const itemId = item => item?.id ?? item?._id ?? '';
@@ -55,9 +56,9 @@ export function attackPrimarySkill(attack, items) {
   return RANK_SOURCE_TYPES.has(source?.type) ? source : null;
 }
 
-/** The mutually linked Attack granted by a Skill/Spell source, if one exists. */
+/** The mutually linked Attack granted by a Skill, Spell, or Gear source, if one exists. */
 export function grantedAttack(source, items) {
-  if (!RANK_SOURCE_TYPES.has(source?.type)) return null;
+  if (!GRANT_SOURCE_TYPES.has(source?.type)) return null;
   return itemLinkState(source, items).resolved.find(item => item.type === 'attack') ?? null;
 }
 
@@ -117,29 +118,37 @@ export async function repairOwnedItemLinks(actor) {
   return updates;
 }
 
-/** Create and link the one Attack granted by an owned Skill/Spell. */
+/** Create and link the one Attack granted by an owned Skill, Spell, or configured Gear. */
 export async function createGrantedAttack(source) {
-  if (!RANK_SOURCE_TYPES.has(source?.type)) throw new Error('Only a Skill or Spell can grant an Attack.');
+  if (!GRANT_SOURCE_TYPES.has(source?.type)) throw new Error('Only a Skill, Spell, or Gear can grant an Attack.');
   const actor = source.parent;
   if (!actor?.items || typeof actor.createEmbeddedDocuments !== 'function') {
-    throw new Error('A Skill or Spell must be owned by an Actor before it can grant an Attack.');
+    throw new Error('An Item must be owned by an Actor before it can grant an Attack.');
   }
   const existing = grantedAttack(source, actor.items);
   if (existing) return existing;
-  const defaults = source.system?.attackDefaults;
+  const gearAttack = source.type === 'gear' ? source.flags?.[SYSTEM_ID]?.grantedAttack : null;
+  if (source.type === 'gear' && (!gearAttack || typeof gearAttack.die !== 'string'
+    || !gearAttack.die || typeof gearAttack.damageType !== 'string'
+    || !gearAttack.damageType || typeof gearAttack.range !== 'string')) {
+    throw new Error(`Invalid Attack defaults for Gear "${source.name}".`);
+  }
+  const defaults = gearAttack ?? source.system?.attackDefaults;
   const [attack] = await actor.createEmbeddedDocuments('Item', [{
     type: 'attack',
     name: source.name,
     img: source.type === 'spell' ? DEFAULT_ITEM_ICONS.spell : DEFAULT_ITEM_ICONS.attack,
     system: {
-      stat: source.type === 'skill' && source.system?.checkType === 'passive' ? '' : (source.system?.stat ?? 'strength'),
+      stat: source.type === 'gear' || (source.type === 'skill' && source.system?.checkType === 'passive')
+        ? '' : (source.system?.stat ?? 'strength'),
+      ...(source.type === 'gear' ? { mobToHitNone: true } : {}),
       rank: Number(source.system?.rank) || 0,
-      primarySkillId: source.id,
+      primarySkillId: source.type === 'gear' ? '' : source.id,
       die: defaults?.die ?? '',
       damageStat: defaults?.damageStat ?? '',
       damageBonus: defaults?.damageBonus ?? 0,
       damageType: defaults?.damageType ?? '',
-      range: source.system?.range ?? '',
+      range: gearAttack?.range ?? source.system?.range ?? '',
       description: source.system?.description ?? '',
     },
   }]);

@@ -70,10 +70,14 @@ export default class DCCCreatureSheet extends DCCActorSheetBase {
     };
   }
 
-  /** The actor-level effect whose `[data-effect-id]` row holds `target`. */
+  /** The actor or item effect whose `[data-effect-id]` row holds `target`. */
   _effectFromTarget(target) {
-    const id = target.closest('[data-effect-id]')?.dataset.effectId;
-    return id ? this.document.effects.get(id) : undefined;
+    const row = target.closest('[data-effect-id]');
+    const id = row?.dataset.effectId;
+    if (!id) return undefined;
+    return row.dataset.itemId
+      ? this.document.items.get(row.dataset.itemId)?.effects.get(id)
+      : this.document.effects.get(id);
   }
 
   /* -------------------------------------------- */

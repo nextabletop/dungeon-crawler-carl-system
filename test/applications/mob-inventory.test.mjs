@@ -26,4 +26,17 @@ describe('Mob inventory', () => {
       ['Potion', false], ['Spear', true],
     ]);
   });
+
+  it('exposes the Skill Potion use action only for configured potions', async () => {
+    const sheet = new MobSheet();
+    const potion = {
+      id: 'potion', name: '+3 Skill Potion', type: 'gear',
+      system: { slot: 'pack', quantity: 1, active: false, description: '' },
+      flags: { 'dungeon-crawler-carl': { skillPotion: { rankBonus: 3 } } },
+    };
+    const gear = { ...potion, id: 'gear', flags: {} };
+    sheet.document = { itemTypes: { gear: [potion, gear], weapon: [] } };
+    const { inventory } = await sheet._prepareContext({});
+    expect(inventory.map(row => row.isSkillPotion)).toEqual([true, false]);
+  });
 });

@@ -15,6 +15,10 @@
   </button>
   {{> @partial-block}}
   <span class="dcc-icontrols">
+    {{#if isSkillPotion}}{{#if @root.editable}}
+    <button type="button" class="icon fa-solid fa-flask" id="{{@root.rootId}}-{{id}}{{idSuffix}}-use" data-action="useSkillPotion"
+            data-tooltip aria-label="{{localize 'DCC.SkillPotion.Use'}}"></button>
+    {{/if}}{{/if}}
     <button type="button" class="icon fa-solid fa-pen-to-square" id="{{@root.rootId}}-{{id}}{{#if isSpell}}-attack{{/if}}{{idSuffix}}-edit" data-action="editItem" data-view-only
             data-tooltip aria-label="{{localize 'DCC.Items.Edit'}}"></button>
     {{#if @root.editable}}

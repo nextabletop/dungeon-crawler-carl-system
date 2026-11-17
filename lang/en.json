@@ -17,6 +17,63 @@
     }
   },
   "DCC": {
+    "ConfigurableGear": {
+      "Title": "Configure Gear",
+      "Replace": "An item already in the selected slot will be moved to the pack.",
+      "Bonus": "Stat and Skill bonus",
+      "Equip": "Equip"
+    },
+    "QualityArmor": {
+      "Name": "{quality} Quality Armor",
+      "Quality": "Quality",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum",
+      "ChooseResistance": "Choose an uncommon damage type",
+      "ChooseSkill": "Choose a Skill",
+      "Suppressed": "This Buff is inactive while its gear is not active.",
+      "ResistanceName": "Resistance to {type}",
+      "ResistanceDescription": "Take half damage of the {type} type while this armor is active. Apply this resistance manually.",
+      "AntiPiercing": "Anti-Piercing",
+      "AntiPiercingDescription": "This armor's Damage Resistance applies against Armor-Piercing damage. Apply this benefit manually."
+    },
+    "SkillPotion": {
+      "Name": "+{bonus} Skill Potion",
+      "BonusTitle": "Skill Potion Bonus",
+      "Bonus": "Ranks gained",
+      "InvalidBonus": "Enter a positive whole number of Ranks.",
+      "ChooseSkill": "Choose a Skill",
+      "Skill": "Skill",
+      "Owned": "{name} (owned)",
+      "Custom": "Create a custom Skill",
+      "Continue": "Continue",
+      "Use": "Use Skill Potion"
+    },
+    "HealingPotion": {
+      "ChoiceTitle": "Healing Potion Quality",
+      "ChoicePrompt": "Choose the quality of this Healing Potion.",
+      "InvalidChoice": "Invalid Healing Potion quality.",
+      "standard": {
+        "Label": "Standard",
+        "Name": "Healing Potion",
+        "Description": "Heals 5 Health Bar slots."
+      },
+      "good": {
+        "Label": "Good",
+        "Name": "Good Healing Potion",
+        "Description": "Heals 6 Health Bar slots."
+      },
+      "gold": {
+        "Label": "Gold Standard",
+        "Name": "Gold Standard Healing Potion",
+        "Description": "Heals 7 Health Bar slots and mends one Minor Injury."
+      },
+      "supreme": {
+        "Label": "Supreme",
+        "Name": "Supreme Healing Potion",
+        "Description": "Heals 8 Health Bar slots and mends one Minor or Major Injury; or deals 8d8 Holy damage to an undead Mob."
+      }
+    },
     "Race": {
       "ReplaceTitle": "Replace Race",
       "ReplaceMessage": "Replace {current} with {next}? Existing Skills and their base Ranks will be kept.",

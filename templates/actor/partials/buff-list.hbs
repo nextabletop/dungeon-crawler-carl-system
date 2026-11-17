@@ -1,4 +1,4 @@
-{{!-- Buffs & Debuffs: actor-level effects (item effects live on their items). --}}
+{{!-- Buffs & Debuffs, including explicitly listed item effects. --}}
 <div class="dcc-box dcc-list">
   <div class="dcc-bar dcc-bar--list">
     <span>{{localize "DCC.Buff.Header"}}</span>
@@ -10,20 +10,21 @@
   </div>
   <ol class="dcc-ilist dcc-ilist--buffs">
     {{#each buffs}}
-    <li class="dcc-irow{{#if disabled}} dcc-irow--off{{/if}}" data-effect-id="{{id}}">
-      <button type="button" class="icon fa-solid {{#if disabled}}fa-toggle-off{{else}}fa-toggle-on{{/if}} dcc-itoggle"
-              id="{{@root.rootId}}-{{id}}-toggle" data-action="toggleEffect" data-tooltip
-              aria-label="{{#if disabled}}{{localize 'DCC.Buff.Enable'}}{{else}}{{localize 'DCC.Buff.Disable'}}{{/if}}"></button>
-      <button type="button" class="dcc-iname" id="{{@root.rootId}}-{{id}}-name" data-action="editEffect" data-view-only>
+    <li class="dcc-irow{{#if (or disabled suppressed)}} dcc-irow--off{{/if}}" data-effect-id="{{id}}"{{#if itemId}} data-item-id="{{itemId}}"{{/if}}>
+      <button type="button" class="icon fa-solid {{#if (or disabled suppressed)}}fa-toggle-off{{else}}fa-toggle-on{{/if}} dcc-itoggle"
+              id="{{@root.rootId}}-{{rowId}}-toggle" data-action="toggleEffect" data-tooltip
+              {{#if suppressed}}disabled title="{{localize 'DCC.QualityArmor.Suppressed'}}"{{/if}}
+              aria-label="{{#if suppressed}}{{localize 'DCC.QualityArmor.Suppressed'}}{{else}}{{#if disabled}}{{localize 'DCC.Buff.Enable'}}{{else}}{{localize 'DCC.Buff.Disable'}}{{/if}}{{/if}}"></button>
+      <button type="button" class="dcc-iname" id="{{@root.rootId}}-{{rowId}}-name" data-action="editEffect" data-view-only>
         <img src="{{img}}" alt="" width="20" height="20">
         <span>{{name}}</span>
       </button>
       <span class="dcc-ichanges">{{changes}}</span>
       <span class="dcc-icontrols">
-        <button type="button" class="icon fa-solid fa-pen-to-square" id="{{@root.rootId}}-{{id}}-edit" data-action="editEffect" data-view-only
+        <button type="button" class="icon fa-solid fa-pen-to-square" id="{{@root.rootId}}-{{rowId}}-edit" data-action="editEffect" data-view-only
                 data-tooltip aria-label="{{localize 'DCC.Effect.Edit'}}"></button>
         {{#if @root.editable}}
-        <button type="button" class="icon fa-solid fa-trash" id="{{@root.rootId}}-{{id}}-delete" data-action="deleteEffect"
+        <button type="button" class="icon fa-solid fa-trash" id="{{@root.rootId}}-{{rowId}}-delete" data-action="deleteEffect"
                 data-tooltip aria-label="{{localize 'DCC.Effect.Delete'}}"></button>
         {{/if}}
       </span>

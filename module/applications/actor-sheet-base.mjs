@@ -1,8 +1,11 @@
 import { itemModels } from '../data/item/_module.mjs';
-import { SYSTEM_ID, APP_CLASSES, DEFAULT_ITEM_ICONS } from '../config.mjs';
+import { SYSTEM_ID, APP_CLASSES, DEFAULT_ITEM_ICONS, GEAR_SLOTS } from '../config.mjs';
 import DCCSheetConfig from './sheet-config.mjs';
 import { slotClickTarget, slotView, isDying } from '../rules/health.mjs';
-import { inlineFieldValue, inlineEditTarget, isBlankHTML, richTextFieldNames, enableViewOnlyControls } from './sheet-rows.mjs';
+import { inlineFieldValue, inlineEditTarget, isBlankHTML, richTextFieldNames, enableViewOnlyControls, singleFlight } from './sheet-rows.mjs';
+import { skillPotionBonus, useSkillPotion } from '../rules/skill-potion.mjs';
+import { choosePotionSkill } from './skill-potion.mjs';
+import { ACCESSORY_CHOICES, ARMOR_QUALITIES, ARMOR_RESISTANCES, ARMOR_SKILLS, dropConfigurableGear } from '../rules/configurable-gear.mjs';
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -56,6 +59,8 @@ export const confirmYesNo = async (titleKey, html) => (await foundry.application
   modal: true,
 })) === true;
 
+const HEALING_POTION_QUALITIES = ['standard', 'good', 'gold', 'supreme'];
+
 /** Shared ApplicationV2 actor sheet for all DCC actor types. */
 export default class DCCActorSheetBase extends HandlebarsApplicationMixin(foundry.applications.sheets.ActorSheet) {
   static DEFAULT_OPTIONS = {
@@ -71,6 +76,7 @@ export default class DCCActorSheetBase extends HandlebarsApplicationMixin(foundr
       editItem: DCCActorSheetBase.#onEditItem,
       deleteItem: DCCActorSheetBase.#onDeleteItem,
       rollAttack: DCCActorSheetBase.#onRollAttack,
+      useSkillPotion: DCCActorSheetBase.#onUseSkillPotion,
     },
   };
 
@@ -105,6 +111,128 @@ export default class DCCActorSheetBase extends HandlebarsApplicationMixin(foundr
         actorType: game.i18n.localize(`TYPES.Actor.${this.document.type}`),
       }));
       return null;
+    }
+    if (item.type === 'gear' && item.getFlag(SYSTEM_ID, 'configurableGear')) {
+      if (!this.isEditable) return null;
+      try {
+        return await dropConfigurableGear(this.actor, item, {
+          canEdit: () => this.isEditable,
+          packs: game.packs,
+          choose: async kind => {
+            const escape = foundry.utils.escapeHTML;
+            const slots = GEAR_SLOTS.map(slot =>
+              `<option value="${slot}">${escape(game.i18n.localize(`DCC.Slot.${slot}`))}</option>`).join('');
+            const choices = ACCESSORY_CHOICES.map((pair, index) =>
+              `<option value="${index}">${escape(game.i18n.localize(`DCC.Stat.${pair.stat}`))} / ${escape(pair.skill)}</option>`).join('');
+            const qualities = ARMOR_QUALITIES.map(quality =>
+              `<option value="${quality}">${escape(game.i18n.localize(`DCC.QualityArmor.${quality}`))}</option>`).join('');
+            const result = await foundry.applications.api.DialogV2.wait({
+              window: { title: game.i18n.localize('DCC.ConfigurableGear.Title') },
+              content: `<p>${escape(game.i18n.localize('DCC.ConfigurableGear.Replace'))}</p>
+                <div class="form-group"><label for="dcc-gear-slot">${escape(game.i18n.localize('DCC.Inventory.Slot'))}</label>
+                  <select id="dcc-gear-slot" name="slot"><option value="" selected disabled>—</option>${slots}</select></div>
+                ${kind === 'accessory' ? `<div class="form-group"><label for="dcc-gear-bonus">${escape(game.i18n.localize('DCC.ConfigurableGear.Bonus'))}</label>
+                  <select id="dcc-gear-bonus" name="bonus"><option value="" selected disabled>—</option>${choices}</select></div>` : ''}
+                ${kind === 'qualityArmor' ? `<div class="form-group"><label for="dcc-gear-quality">${escape(game.i18n.localize('DCC.QualityArmor.Quality'))}</label>
+                  <select id="dcc-gear-quality" name="quality"><option value="" selected disabled>—</option>${qualities}</select></div>` : ''}`,
+              buttons: [
+                { action: 'apply', label: game.i18n.localize('DCC.ConfigurableGear.Equip'),
+                  callback: (_event, button) => ({
+                    slot: button.form.elements.namedItem('slot').value,
+                    choice: kind === 'accessory' ? button.form.elements.namedItem('bonus').value : '',
+                    quality: kind === 'qualityArmor' ? button.form.elements.namedItem('quality').value : '',
+                  }) },
+                { action: 'cancel', label: game.i18n.localize('DCC.Inventory.Cancel') },
+              ],
+              classes: [...APP_CLASSES], rejectClose: false, modal: true,
+            });
+            if (result == null || result === 'cancel') return null;
+            const selection = { slot: result.slot, choice: /^\d+$/.test(result.choice) ? Number(result.choice) : -1, quality: result.quality };
+            if (kind !== 'qualityArmor' || !['gold', 'platinum'].includes(result.quality)) return selection;
+            const gold = result.quality === 'gold';
+            const values = gold ? ARMOR_RESISTANCES : ARMOR_SKILLS;
+            const label = game.i18n.localize(gold ? 'DCC.QualityArmor.ChooseResistance' : 'DCC.QualityArmor.ChooseSkill');
+            const bonus = await foundry.applications.api.DialogV2.wait({
+              window: { title: label },
+              content: `<div class="form-group"><label for="dcc-armor-choice">${escape(label)}</label>
+                <select id="dcc-armor-choice" name="choice"><option value="" selected disabled>—</option>
+                  ${values.map(value => `<option value="${escape(value)}">${escape(value)}</option>`).join('')}</select></div>`,
+              buttons: [
+                { action: 'apply', label: game.i18n.localize('DCC.ConfigurableGear.Equip'),
+                  callback: (_event, button) => button.form.elements.namedItem('choice').value },
+                { action: 'cancel', label: game.i18n.localize('DCC.Inventory.Cancel') },
+              ],
+              classes: [...APP_CLASSES], rejectClose: false, modal: true,
+            });
+            if (bonus == null || bonus === 'cancel') return null;
+            return { ...selection, ...(gold ? { resistance: bonus } : { skill: bonus }) };
+          },
+        });
+      } catch (error) {
+        ui.notifications.error(error, { console: true });
+        return null;
+      }
+    }
+    if (item.type === 'gear' && !item.parent
+      && item.getFlag(SYSTEM_ID, 'skillPotion')?.rankBonus == null
+      && item.getFlag(SYSTEM_ID, 'skillPotion')) {
+      if (!this.isEditable) return null;
+      const result = await foundry.applications.api.DialogV2.wait({
+        window: { title: game.i18n.localize('DCC.SkillPotion.BonusTitle') },
+        content: `<div class="form-group"><label for="dcc-potion-bonus">${foundry.utils.escapeHTML(game.i18n.localize('DCC.SkillPotion.Bonus'))}</label>
+          <input id="dcc-potion-bonus" name="bonus" type="number" min="1" step="1" value="1"></div>`,
+        buttons: [
+          { action: 'apply', label: game.i18n.localize('DCC.SkillPotion.Continue'),
+            callback: (_event, button) => ({ bonus: Number(button.form.elements.namedItem('bonus').value) }) },
+          { action: 'cancel', label: game.i18n.localize('DCC.Inventory.Cancel') },
+        ],
+        classes: [...APP_CLASSES], rejectClose: false, modal: true,
+      });
+      if (result == null || result === 'cancel') return null;
+      if (!Number.isSafeInteger(result.bonus) || result.bonus < 1) {
+        ui.notifications.error(game.i18n.localize('DCC.SkillPotion.InvalidBonus'));
+        return null;
+      }
+      if (!this.isEditable || !this.actor.isOwner) return null;
+      const keepId = !this.actor.items.has(item.id);
+      const data = item.inCompendium ? game.items.fromCompendium(item, { clearFolder: true, keepId }) : item.toObject();
+      data.name = game.i18n.format('DCC.SkillPotion.Name', { bonus: result.bonus });
+      data.flags ??= {};
+      data.flags[SYSTEM_ID] ??= {};
+      data.flags[SYSTEM_ID].skillPotion = { rankBonus: result.bonus };
+      return (await Item.implementation.create(data, { parent: this.actor, keepId })) ?? null;
+    }
+    if (item.type === 'gear' && !item.parent
+      && item.getFlag(SYSTEM_ID, 'starterSetSourceId') === 'standard-gear:healing-potion'
+      && !item.getFlag(SYSTEM_ID, 'healingPotionQuality')) {
+      if (!this.isEditable) return null;
+      const quality = await foundry.applications.api.DialogV2.wait({
+        window: { title: game.i18n.localize('DCC.HealingPotion.ChoiceTitle') },
+        content: `<p>${foundry.utils.escapeHTML(game.i18n.localize('DCC.HealingPotion.ChoicePrompt'))}</p>`,
+        buttons: [
+          ...HEALING_POTION_QUALITIES.map(action => ({
+            action, label: game.i18n.localize(`DCC.HealingPotion.${action}.Label`),
+          })),
+          { action: 'cancel', label: game.i18n.localize('DCC.Inventory.Cancel') },
+        ],
+        classes: [...APP_CLASSES],
+        rejectClose: false,
+        modal: true,
+      });
+      if (quality == null || quality === 'cancel') return null;
+      if (!HEALING_POTION_QUALITIES.includes(quality)) {
+        ui.notifications.error(game.i18n.localize('DCC.HealingPotion.InvalidChoice'));
+        return null;
+      }
+      if (!this.isEditable || !this.actor.isOwner) return null;
+      const keepId = !this.actor.items.has(item.id);
+      const data = item.inCompendium ? game.items.fromCompendium(item, { clearFolder: true, keepId }) : item.toObject();
+      data.name = game.i18n.localize(`DCC.HealingPotion.${quality}.Name`);
+      data.system.description = `<p>${foundry.utils.escapeHTML(game.i18n.localize(`DCC.HealingPotion.${quality}.Description`))}</p>`;
+      data.flags ??= {};
+      data.flags[SYSTEM_ID] ??= {};
+      data.flags[SYSTEM_ID].healingPotionQuality = quality;
+      return (await Item.implementation.create(data, { parent: this.actor, keepId })) ?? null;
     }
     return super._onDropItem(event, item);
   }
@@ -325,6 +453,29 @@ export default class DCCActorSheetBase extends HandlebarsApplicationMixin(foundr
   _itemFromTarget(target) {
     const id = target.closest('[data-item-id]')?.dataset.itemId;
     return id ? this.document.items.get(id) : undefined;
+  }
+
+  #useSkillPotion = singleFlight(item => runGuarded(async () => {
+    if (!this.isEditable || !(await this._flushForm())) return;
+    let selection;
+    const skill = await useSkillPotion(this.document, item, {
+      packs: game.packs,
+      choose: async (actor, packs) => {
+        selection = await choosePotionSkill(actor, packs);
+        return this.isEditable ? selection : null;
+      },
+    });
+    if (skill && selection?.kind === 'custom') skill.sheet.render(true);
+  }));
+
+  async _useSkillPotion(item) {
+    if (skillPotionBonus(item) === undefined) throw new Error('This item is not a Skill Potion.');
+    await this.#useSkillPotion(item);
+  }
+
+  static async #onUseSkillPotion(_event, target) {
+    const item = this._itemFromTarget(target);
+    if (item) await this._useSkillPotion(item);
   }
 
   /* -------------------------------------------- */
