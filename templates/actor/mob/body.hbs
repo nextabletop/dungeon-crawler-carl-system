@@ -184,6 +184,9 @@
   </div>
 
   <div class="dcc-col dcc-col-r">
+    {{#if system.mobShowSkills}}
+    {{> "systems/dungeon-crawler-carl/templates/actor/partials/skill-list.hbs" rows=skillsAndSpells combined=true lean=true}}
+    {{/if}}
     {{#if system.mobShowInventory}}
     <div class="dcc-box dcc-list">
       <div class="dcc-bar dcc-bar--list">
@@ -217,10 +220,6 @@
         {{/each}}
       </ol>
     </div>
-    {{/if}}
-    {{#if system.mobShowSkills}}
-    {{> "systems/dungeon-crawler-carl/templates/actor/partials/skill-list.hbs" rows=skills lean=true}}
-    {{> "systems/dungeon-crawler-carl/templates/actor/partials/skill-list.hbs" rows=spells spell=true lean=true}}
     {{/if}}
   </div>
 </section>

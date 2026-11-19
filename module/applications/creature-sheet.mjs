@@ -1,6 +1,6 @@
-import DCCActorSheetBase from './actor-sheet-base.mjs';
+import DCCActorSheetBase, { runGuarded } from './actor-sheet-base.mjs';
 import { ROLL_ABBR, APP_CLASSES } from '../config.mjs';
-import { abilityRows, sheetItemLists, buffRows } from './sheet-rows.mjs';
+import { abilityRows, sheetItemLists, buffRows, singleFlight } from './sheet-rows.mjs';
 import { postCard } from '../rolls/card.mjs';
 import { DCC_CHANGE_TYPE } from '../effects/dcc-change.mjs';
 import { crewingOf } from '../rules/crew.mjs';
@@ -17,6 +17,7 @@ export default class DCCCreatureSheet extends DCCActorSheetBase {
       rollEvade: DCCCreatureSheet.#onRollEvade,
       rollSkill: DCCCreatureSheet.#onRollSkill,
       castSpell: DCCCreatureSheet.#onCastSpell,
+      createSkillOrSpell: DCCCreatureSheet.#onCreateSkillOrSpell,
       toggleEffect: DCCCreatureSheet.#onToggleEffect,
       createBuff: DCCCreatureSheet.#onCreateBuff,
       editEffect: DCCCreatureSheet.#onEditEffect,
@@ -83,6 +84,30 @@ export default class DCCCreatureSheet extends DCCActorSheetBase {
   /* -------------------------------------------- */
   /*  Actions                                     */
   /* -------------------------------------------- */
+
+  #createSkillOrSpell = singleFlight(() => runGuarded(async () => {
+    if (!this.isEditable) return;
+    const type = await foundry.applications.api.DialogV2.wait({
+      window: { title: game.i18n.localize('DCC.Items.AddSkillOrSpell') },
+      content: `<p>${foundry.utils.escapeHTML(game.i18n.localize('DCC.Items.ChooseSkillOrSpell'))}</p>`,
+      buttons: [
+        { action: 'skill', label: game.i18n.localize('TYPES.Item.skill') },
+        { action: 'spell', label: game.i18n.localize('TYPES.Item.spell') },
+        { action: 'cancel', label: game.i18n.localize('DCC.Inventory.Cancel') },
+      ],
+      classes: [...APP_CLASSES],
+      rejectClose: false,
+      modal: true,
+    });
+    if (type === null || type === 'cancel') return;
+    if (type !== 'skill' && type !== 'spell') throw new Error(`Unexpected skill or spell item type: ${type}`);
+    await this._createOwnedItem(type);
+  }));
+
+  /** @this {DCCCreatureSheet} */
+  static async #onCreateSkillOrSpell() {
+    await this.#createSkillOrSpell();
+  }
 
   // Every action that reads actor or item data saves pending input first
   // (_flushForm: a Base just typed, then inline item edits), so it reads what

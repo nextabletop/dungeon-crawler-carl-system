@@ -271,7 +271,8 @@ describe('Health Bar UI', () => {
       it('gates Mob inventory, Skills and Spells, and buffs without hiding Attacks', () => {
         const template = readFileSync(new URL('../../templates/actor/mob/body.hbs', import.meta.url), 'utf8');
         expect(template).toMatch(/{{#if system\.mobShowInventory}}[\s\S]*DCC\.Tab\.inventory[\s\S]*{{\/if}}/);
-        expect(template).toMatch(/{{#if system\.mobShowSkills}}[\s\S]*rows=skills[\s\S]*rows=spells[\s\S]*{{\/if}}/);
+        expect(template).toMatch(/{{#if system\.mobShowSkills}}[\s\S]*rows=skillsAndSpells combined=true lean=true[\s\S]*{{\/if}}/);
+        expect(template.indexOf('{{#if system.mobShowSkills}}')).toBeLessThan(template.indexOf('{{#if system.mobShowInventory}}'));
         expect(template).toMatch(/{{#if system\.mobShowBuffs}}[\s\S]*actor\/partials\/buff-list\.hbs[\s\S]*{{\/if}}/);
         expect(template.indexOf('actor/partials/attack-list.hbs')).toBeLessThan(template.indexOf('{{#if system.mobShowBuffs}}'));
       });
@@ -393,14 +394,14 @@ describe('Health Bar UI', () => {
     });
   });
 
-  it('renders variable slots with tier colors and no more than 12 columns', () => {
+  it('renders variable slots with tier colors and no more than 10 columns', () => {
     const template = readFileSync(new URL('../../templates/actor/partials/health-bar.hbs', import.meta.url), 'utf8');
     const css = readFileSync(new URL('../../styles/system.css', import.meta.url), 'utf8');
     const sheet = readFileSync(new URL('../../module/applications/actor-sheet-base.mjs', import.meta.url), 'utf8');
     expect(template).toContain('--dcc-hb-columns: {{health.columns}}');
     expect(template).toContain('tier-{{slot.tier}}');
     expect(template).toContain('{{slot.percent}}%');
-    expect(sheet).toContain('Math.min(12, system.healthBarSlots)');
+    expect(sheet).toContain('Math.min(10, system.healthBarSlots)');
     expect(css).toContain('grid-template-columns: repeat(var(--dcc-hb-columns), minmax(0, 1fr))');
     for (let tier = 1; tier <= 10; tier++) expect(css).toContain(`.dcc-hb-slot.filled.tier-${tier} {`);
   });
@@ -986,7 +987,7 @@ describe('skill and spell authored metadata templates', () => {
   const description = readFileSync(new URL('../../templates/item/partials/description.hbs', import.meta.url), 'utf8');
   const upgrades = readFileSync(new URL('../../templates/item/upgrades.hbs', import.meta.url), 'utf8');
 
-  it('combines only Crawler lists and preserves per-row casting and spell metadata', () => {
+  it('combines Crawler and Mob lists and preserves per-row casting and spell metadata', () => {
     const pc = readFileSync(new URL('../../templates/actor/pc/skills.hbs', import.meta.url), 'utf8');
     const sheet = readFileSync(new URL('../../module/applications/pc-sheet.mjs', import.meta.url), 'utf8');
     const mob = readFileSync(new URL('../../templates/actor/mob/body.hbs', import.meta.url), 'utf8');
@@ -998,7 +999,8 @@ describe('skill and spell authored metadata templates', () => {
     expect(list).toContain('DCC.Items.NoSkillsOrSpells');
     expect(list).toMatch(/{{#if spell}}\s*<button[^>]+data-action="castSpell"/);
     expect(list).toContain('data-action="rollSkill"');
-    expect(mob).not.toContain('combined=true');
+    expect(mob.match(/partials\/skill-list.hbs/g)).toHaveLength(1);
+    expect(mob).toContain('rows=skillsAndSpells combined=true lean=true');
   });
 
   it('edits Range, Cooldown, and Limitations on skills and spells, with spell-only Duration', () => {

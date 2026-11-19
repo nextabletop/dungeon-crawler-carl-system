@@ -2,9 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 vi.mock('../../module/applications/sheet-config.mjs', () => ({ default: class {} }));
-vi.mock('../../module/applications/creature-sheet.mjs', async () => ({
-  default: (await import('../../module/applications/actor-sheet-base.mjs')).default,
-}));
 vi.mock('../../module/rules/race.mjs', async importOriginal => ({
   ...await importOriginal(), dropRace: vi.fn(), dropClass: vi.fn(),
 }));
@@ -15,11 +12,13 @@ foundry.utils.escapeHTML = text => text.replaceAll('<', '&lt;');
 globalThis.ui = { notifications: { error: vi.fn(), warn: vi.fn() } };
 
 const { default: PcSheet } = await import('../../module/applications/pc-sheet.mjs');
+const { default: MobSheet } = await import('../../module/applications/mob-sheet.mjs');
+const { default: CreatureSheet } = await import('../../module/applications/creature-sheet.mjs');
 const { default: ActorSheetBase } = await import('../../module/applications/actor-sheet-base.mjs');
 const { dropRace, dropClass } = await import('../../module/rules/race.mjs');
 const chooseItem = PcSheet.DEFAULT_OPTIONS.actions.createInventoryItem;
 const createItem = ActorSheetBase.DEFAULT_OPTIONS.actions.createItem;
-const chooseSkillOrSpell = PcSheet.DEFAULT_OPTIONS.actions.createSkillOrSpell;
+const chooseSkillOrSpell = CreatureSheet.DEFAULT_OPTIONS.actions.createSkillOrSpell;
 
 const makeSheet = () => {
   const sheet = new PcSheet();
@@ -351,8 +350,15 @@ describe('Crawler Class drop', () => {
   });
 });
 
-describe('Crawler combined Skill and Spell creation', () => {
+describe.each([['Crawler', PcSheet], ['Mob', MobSheet]])('%s combined Skill and Spell creation', (_name, Sheet) => {
   beforeEach(() => vi.clearAllMocks());
+
+  const makeSheet = () => {
+    const sheet = new Sheet();
+    sheet.isEditable = true;
+    sheet.document = { createEmbeddedDocuments: vi.fn() };
+    return sheet;
+  };
 
   it.each([
     ['skill', 'icons/svg/book.svg'],

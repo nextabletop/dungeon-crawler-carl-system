@@ -9,7 +9,7 @@ import { inventoryView } from './sheet-rows.mjs';
  *
  * Rolls whisper to the GM when `system.mobWhisper` is enabled (postCard / whisperToGM),
  * set in Configure Sheet (DCCSheetConfig).
- * Inventory, Skills & Spells, and Buffs & Debuffs are optional sheet sections.
+ * Combined Skills & Spells, Inventory below it, and Buffs & Debuffs are optional sheet sections.
  * Owned item types: the base default (weapon, skill, spell, gear).
  */
 export default class MobSheet extends DCCCreatureSheet {
@@ -34,6 +34,9 @@ export default class MobSheet extends DCCCreatureSheet {
   /** @inheritDoc */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
-    return Object.assign(context, { inventory: inventoryView(this.document.itemTypes).inventory });
+    return Object.assign(context, {
+      skillsAndSpells: [...context.skills, ...context.spells],
+      inventory: inventoryView(this.document.itemTypes).inventory,
+    });
   }
 }

@@ -1536,7 +1536,7 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 }
 .dcc.sheet.actor .dcc-mob-attack-name {
   display: block;
-  max-width: 160px;
+  max-width: 220px;
   overflow: hidden;
 }
 .dcc.sheet.actor .dcc-mob-attack-to-hit,

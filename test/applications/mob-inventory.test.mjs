@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../module/applications/creature-sheet.mjs', () => ({
   default: class {
-    async _prepareContext() { return { preserved: true }; }
+    async _prepareContext() {
+      return {
+        preserved: true,
+        skills: [{ id: 'skill', spell: false }],
+        spells: [{ id: 'spell', spell: true }],
+      };
+    }
   },
 }));
 vi.mock('../../module/applications/actor-sheet-base.mjs', () => ({
@@ -22,6 +28,9 @@ describe('Mob inventory', () => {
 
     const context = await sheet._prepareContext({});
     expect(context.preserved).toBe(true);
+    expect(context.skillsAndSpells).toEqual([
+      { id: 'skill', spell: false }, { id: 'spell', spell: true },
+    ]);
     expect(context.inventory.map(row => [row.name, row.isWeapon])).toEqual([
       ['Potion', false], ['Spear', true],
     ]);

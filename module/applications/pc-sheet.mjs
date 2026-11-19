@@ -48,7 +48,6 @@ export default class PcSheet extends DCCCreatureSheet {
     position: { width: 720, height: 900 },
     actions: {
       createInventoryItem: PcSheet.#onCreateInventoryItem,
-      createSkillOrSpell: PcSheet.#onCreateSkillOrSpell,
       useHotlist: PcSheet.#onUseHotlist,
       advancementEndSession: PcSheet.#onAdvancementEndSession,
       advancementEndFloor: PcSheet.#onAdvancementEndFloor,
@@ -209,30 +208,6 @@ export default class PcSheet extends DCCCreatureSheet {
   /** @this {PcSheet} */
   static async #onCreateInventoryItem() {
     await this.#createInventoryItem();
-  }
-
-  #createSkillOrSpell = singleFlight(() => runGuarded(async () => {
-    if (!this.isEditable) return;
-    const type = await foundry.applications.api.DialogV2.wait({
-      window: { title: game.i18n.localize('DCC.Items.AddSkillOrSpell') },
-      content: `<p>${foundry.utils.escapeHTML(game.i18n.localize('DCC.Items.ChooseSkillOrSpell'))}</p>`,
-      buttons: [
-        { action: 'skill', label: game.i18n.localize('TYPES.Item.skill') },
-        { action: 'spell', label: game.i18n.localize('TYPES.Item.spell') },
-        { action: 'cancel', label: game.i18n.localize('DCC.Inventory.Cancel') },
-      ],
-      classes: [...APP_CLASSES],
-      rejectClose: false,
-      modal: true,
-    });
-    if (type === null || type === 'cancel') return;
-    if (type !== 'skill' && type !== 'spell') throw new Error(`Unexpected skill or spell item type: ${type}`);
-    await this._createOwnedItem(type);
-  }));
-
-  /** @this {PcSheet} */
-  static async #onCreateSkillOrSpell() {
-    await this.#createSkillOrSpell();
   }
 
   /**
