@@ -18,6 +18,8 @@ export const templatePath = p => `systems/${SYSTEM_ID}/templates/${p}`;
 
 export const ACTOR_PARTIALS = Object.freeze({
   healthBar: templatePath('actor/partials/health-bar.hbs'),
+  creatureHealth: templatePath('actor/partials/creature-health.hbs'),
+  shieldBar: templatePath('actor/partials/shield-bar.hbs'),
   defenses: templatePath('actor/partials/defenses.hbs'),
   itemRow: templatePath('actor/partials/item-row.hbs'),
   unresolved: templatePath('actor/partials/unresolved.hbs'),
@@ -71,7 +73,6 @@ export default class DCCActorSheetBase extends HandlebarsApplicationMixin(foundr
     actions: {
       configureSheet: DCCActorSheetBase.#onConfigureSheet,
       setSlots: DCCActorSheetBase.#onSetSlots,
-      healSlot: DCCActorSheetBase.#onHealSlot,
       createItem: DCCActorSheetBase.#onCreateItem,
       editItem: DCCActorSheetBase.#onEditItem,
       deleteItem: DCCActorSheetBase.#onDeleteItem,
@@ -507,14 +508,6 @@ export default class DCCActorSheetBase extends HandlebarsApplicationMixin(foundr
   static async #onSetSlots(_event, target) {
     const actor = this.document;
     await actor.setSlots(slotClickTarget(target.dataset.slot, actor.currentSlots));
-  }
-
-  /**
-   * Heal one slot.
-   * @this {DCCActorSheetBase}
-   */
-  static async #onHealSlot() {
-    await this.document.healSlots(1);
   }
 
   /**

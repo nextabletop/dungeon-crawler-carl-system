@@ -28,25 +28,21 @@
   </header>
 
   <div class="dcc-col dcc-col-l">
-    <div class="dcc-box dcc-health">
-      <div class="dcc-bar">
-        <span>{{localize "DCC.Health.Bar"}}</span>
-        {{#if health.dying}}<span class="dcc-dying">{{localize "DCC.Health.Dead"}}</span>{{/if}}
-        <button type="button" class="dcc-addbtn" data-action="healSlot">{{localize "DCC.Health.HealSlot"}}</button>
-      </div>
-      {{> "systems/dungeon-crawler-carl/templates/actor/partials/health-bar.hbs"}}
-    </div>
+    {{> "systems/dungeon-crawler-carl/templates/actor/partials/creature-health.hbs" dyingLabel="DCC.Health.Dead"}}
+    {{> "systems/dungeon-crawler-carl/templates/actor/partials/shield-bar.hbs"}}
 
     <div class="dcc-box dcc-mob-combat">
-      <div class="dcc-bar">{{localize "DCC.Tab.combat"}}</div>
-      <div class="dcc-mobstrip">
+      <div class="dcc-bar">
+        <span>{{localize "DCC.Tab.combat"}}</span>
         {{#if editable}}
-        <label class="dcc-mob-edit" data-tooltip="{{localize 'DCC.Mob.EditCombat'}}">
+        <label class="dcc-edit-toggle" data-tooltip="{{localize 'DCC.Mob.EditCombat'}}">
           <input type="checkbox" name="system.mobCombatEdit" {{checked systemSource.mobCombatEdit}}
                  aria-label="{{localize 'DCC.Mob.EditCombat'}}">
           <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
         </label>
         {{/if}}
+      </div>
+      <div class="dcc-mobstrip">
         <div class="dcc-mob-combat-grid" role="region" aria-label="{{localize 'DCC.Tab.combat'}}" tabindex="0">
           <div class="dcc-mob-combat-stat">
             <span class="dcc-flabel">{{localize "DCC.Header.Level"}}</span>
@@ -140,16 +136,18 @@
       {{> "systems/dungeon-crawler-carl/templates/actor/partials/unresolved.hbs"}}
     </div>
 
-    <div class="dcc-box">
-      <div class="dcc-bar">{{localize "DCC.Abilities"}}</div>
-      <div class="dcc-mob-abilities">
+    <div class="dcc-box dcc-mob-abilities-card">
+      <div class="dcc-bar">
+        <span>{{localize "DCC.Abilities"}}</span>
         {{#if editable}}
-        <label class="dcc-mob-edit" data-tooltip="{{localize 'DCC.Mob.EditAbilities'}}">
+        <label class="dcc-edit-toggle" data-tooltip="{{localize 'DCC.Mob.EditAbilities'}}">
           <input type="checkbox" name="system.mobAbilitiesEdit" {{checked systemSource.mobAbilitiesEdit}}
                  aria-label="{{localize 'DCC.Mob.EditAbilities'}}">
           <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
         </label>
         {{/if}}
+      </div>
+      <div class="dcc-mob-abilities">
         <div class="dcc-stats" role="region" aria-label="{{localize 'DCC.Abilities'}}" tabindex="0">
           {{#each stats as |s|}}
           <div class="dcc-stat">

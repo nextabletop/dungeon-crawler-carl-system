@@ -32,6 +32,29 @@ const prepare = (Model, source) => {
 const pc = (con, healthBar) => prepare(PcModel, pcSource({ stats: stats({ constitution: con }), healthBar }));
 const changes = (flat) => foundry.utils.expandObject(flat);
 
+describe('manual shield bar updates', () => {
+  it.each([{ Model: PcModel, type: 'Crawler' }, { Model: MobModel, type: 'Mob' }])(
+    'clamps a shrinking shield without restoring slots when it grows on a $type',
+    async ({ Model }) => {
+      const m = prepare(Model, pcSource({ shieldSlots: 5, shieldBar: 4, healthBar: 7 }));
+      const shrink = changes({ 'system.shieldSlots': 2 });
+      await m._preUpdate(shrink, {}, {});
+      expect(shrink.system).toEqual({ shieldSlots: 2, shieldBar: 2 });
+
+      Object.assign(m, shrink.system);
+      const grow = changes({ 'system.shieldSlots': 5 });
+      await m._preUpdate(grow, {}, {});
+      expect(grow.system).toEqual({ shieldSlots: 5 });
+    });
+
+  it('hiding a shield preserves its slots and health per slot', async () => {
+    const m = prepare(MobModel, creatureSource({ showShield: true, shieldSlots: 5, shieldBar: 4, shieldSlotHealth: 3 }));
+    const hide = changes({ 'system.showShield': false });
+    await m._preUpdate(hide, {}, {});
+    expect(hide.system).toEqual({ showShield: false });
+  });
+});
+
 describe('oracle: applyHealthPointsEdit', () => {
   it('applyHealthPointsEdit(10, 31, 4) -> healthBar 8, healthPoints 32 (healthbar.test.js:60)', () => {
     expect(applyHealthPointsEdit(10, 31, 4)).toEqual({ healthBar: 8, healthPoints: 32 });

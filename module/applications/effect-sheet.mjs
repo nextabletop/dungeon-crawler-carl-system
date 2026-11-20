@@ -26,6 +26,9 @@ export default class DCCActiveEffectConfig extends foundry.applications.sheets.A
 
   async _onRender(context, options) {
     await super._onRender(context, options);
+    const conditionsLabel = this.element.querySelector('.form-group.statuses > label');
+    if (conditionsLabel) conditionsLabel.textContent = game.i18n.localize('DCC.Effect.FoundryConditions');
+
     const actor = effectActor(this.document);
     const targets = itemTargetOptions(actor?.items?.contents);
     for (const row of this.element.querySelectorAll('.tab.changes [data-changes] > li[data-index]')) {

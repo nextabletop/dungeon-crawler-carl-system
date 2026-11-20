@@ -13,12 +13,10 @@
       </div>
       <p class="hint">{{localize "DCC.Settings.ManaStatHint"}}</p>
     </div>
-    <div class="form-group">
+    <div class="form-group inline dcc-auto-enable-cast">
       <label for="{{rootId}}-autoEnableCast">{{localize "DCC.Settings.AutoEnableCast"}}</label>
-      <div class="form-fields">
-        <input type="checkbox" id="{{rootId}}-autoEnableCast" name="system.autoEnableCast"
-               {{checked systemSource.autoEnableCast}} {{disabled (not canEdit)}}>
-      </div>
+      <input type="checkbox" id="{{rootId}}-autoEnableCast" name="system.autoEnableCast"
+             {{checked systemSource.autoEnableCast}} {{disabled (not canEdit)}}>
       <p class="hint">{{localize "DCC.Settings.AutoEnableCastHint"}}</p>
     </div>
   </fieldset>
@@ -59,14 +57,13 @@
   {{/if}}
   {{#if (or (eq dccType "pc") (eq dccType "mob"))}}
   <fieldset>
-    <legend>{{localize "DCC.Health.Bar"}}</legend>
+    <legend>{{localize "DCC.Shield.Bar"}}</legend>
     <div class="form-group">
-      <label for="{{rootId}}-healthBarSlotsCustom">{{localize "DCC.Settings.HealthBarOverride"}}</label>
+      <label for="{{rootId}}-showShield">{{localize "DCC.Shield.Show"}}</label>
       <div class="form-fields">
-        <input type="number" id="{{rootId}}-healthBarSlotsCustom" name="system.healthBarSlotsCustom"
-               value="{{systemSource.healthBarSlotsCustom}}" min="1" max="100" step="1" {{disabled (not canEdit)}}>
+        <input type="checkbox" id="{{rootId}}-showShield" name="system.showShield"
+               {{checked systemSource.showShield}} {{disabled (not canEdit)}}>
       </div>
-      <p class="hint">{{localize "DCC.Settings.HealthBarOverrideHint"}}</p>
     </div>
   </fieldset>
   {{/if}}

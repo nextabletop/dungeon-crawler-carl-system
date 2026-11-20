@@ -2,9 +2,9 @@
   <div class="dcc-bar">
     <span>{{localize "DCC.Tab.combat"}}</span>
     {{#if editable}}
-    <label class="dcc-pc-edit-toggle dcc-pc-combat-edit" data-tooltip="{{localize 'DCC.Defense.EditCombat'}}">
+    <label class="dcc-edit-toggle dcc-pc-combat-edit" data-tooltip="{{localize 'DCC.Defense.EditCombat'}}">
       <input type="checkbox" name="system.pcCombatEdit" {{checked systemSource.pcCombatEdit}} aria-label="{{localize 'DCC.Defense.EditCombat'}}">
-      <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> {{localize "DCC.Defense.Edit"}}
+      <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
     </label>
     {{/if}}
   </div>

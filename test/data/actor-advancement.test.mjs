@@ -82,17 +82,18 @@ describe('endSession', () => {
     const passive = makeItem('skill', 'Passive', { rank: 0, mark: true, checkType: 'passive' });
     const sword = makeItem('weapon', 'Sword', { rank: 0, mark: true });        // not a skill
     const actor = makeActor({ items: [knives, zap, idle, high, passive, sword], system: { pendingLevels: 1 } });
-    FixedRoll.queue = [2, 3];
+    FixedRoll.queue = [2, 3, 10];
 
     const result = await actor.endSession();
 
-    expect(FixedRoll.made.map(r => r.formula)).toEqual(['1d20', '1d20']);
+    expect(FixedRoll.made.map(r => r.formula)).toEqual(['1d20', '1d20', '1d20']);
     for (const r of FixedRoll.made) expect(r.options).toEqual({ allowInteractive: false });
-    expect(result.rolls).toEqual({ [knives.id]: 2, [zap.id]: 3 });
+    expect(result.rolls).toEqual({ [knives.id]: 2, [zap.id]: 3, [passive.id]: 10 });
     expect(actor.updateEmbeddedDocuments).toHaveBeenCalledTimes(1);
     expect(actor.updateEmbeddedDocuments).toHaveBeenCalledWith('Item', [
       { _id: knives.id, 'system.rank': 3, 'system.mark': false },
       { _id: zap.id, 'system.rank': 4, 'system.mark': false },
+      { _id: passive.id, 'system.rank': 1, 'system.mark': false },
     ]);
     expect(actor.update).toHaveBeenCalledTimes(1);
     expect(actor.system.pendingLevels).toBe(2);

@@ -405,7 +405,7 @@ export default class DCCActor extends foundry.documents.Actor {
   }
 
   /**
-   * End Session: marked, non-passive skills and spells at rank <= 4 roll to
+   * End Session: marked skills and spells at rank <= 4 roll to
    * advance; pendingLevels += 1.
    * @returns {Promise<{updates:object[], rolls:object}|null>}
    */
@@ -414,7 +414,7 @@ export default class DCCActor extends foundry.documents.Actor {
   }
 
   /**
-   * End Floor: marked, non-passive skills and spells at rank >= 5 roll to
+   * End Floor: marked skills and spells at rank >= 5 roll to
    * advance (capped by the CURRENT floor, as R20 advances before the
    * increment); floor += 1. A Crawler linked to the GM screen needs an
    * unconsumed floor end and consumes one (floorEndDone + 1); an unlinked PC

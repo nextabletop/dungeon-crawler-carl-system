@@ -1,5 +1,6 @@
 import { STATS, ROLL_ABBR, HEALTH_BAR_SLOT_GUARD } from '../../config.mjs';
 import { deriveCreature } from '../../rules/derive.mjs';
+import { clampSlots } from '../../rules/health.mjs';
 import { int, str, bool, html, pool } from '../_fields.mjs';
 import { resetModifiers, ownedItems, engineItems, assignItemDerived, assignHealth, rewriteHealthPointsEdit, rewriteHealthBarSlotCount } from './_derive-wiring.mjs';
 
@@ -40,7 +41,13 @@ export default class CreatureModel extends foundry.abstract.TypeDataModel {
         STATS.map(s => [s, new fields.SchemaField({ base: int(1) })]),
       )),
       healthBar: int(10, { min: 0 }),
+      healthBarEdit: bool(false),
       healthBarSlotsCustom: new fields.NumberField({ required: true, nullable: true, integer: true, min: 1, max: HEALTH_BAR_SLOT_GUARD, initial: null }),
+      showShield: bool(false),
+      shieldEdit: bool(false),
+      shieldSlots: int(2, { min: 1, max: HEALTH_BAR_SLOT_GUARD }),
+      shieldSlotHealth: int(1, { min: 1 }),
+      shieldBar: int(0, { min: 0, max: HEALTH_BAR_SLOT_GUARD }),
       healthPoints: pool(),
       armor: int(0),
       moveBase: int(20),
@@ -112,6 +119,12 @@ export default class CreatureModel extends foundry.abstract.TypeDataModel {
     const explicitHealthBar = Object.hasOwn(changes.system ?? {}, 'healthBar');
     rewriteHealthPointsEdit(this, changes);
     rewriteHealthBarSlotCount(this, changes, this.constructor.creatureType, explicitHealthBar);
+    const system = changes.system;
+    if (system && ('shieldSlots' in system || 'shieldBar' in system)) {
+      const current = system.shieldBar ?? this.shieldBar;
+      const next = clampSlots(current, system.shieldSlots ?? this.shieldSlots);
+      if (next !== current) system.shieldBar = next;
+    }
     return super._preUpdate(changes, options, user);
   }
 

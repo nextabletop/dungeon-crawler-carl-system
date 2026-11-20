@@ -6,7 +6,7 @@ vi.mock('../../module/rules/race.mjs', async importOriginal => ({
   ...await importOriginal(), dropRace: vi.fn(), dropClass: vi.fn(),
 }));
 
-foundry.applications.api = { HandlebarsApplicationMixin: base => base, DialogV2: { wait: vi.fn() } };
+foundry.applications.api = { HandlebarsApplicationMixin: base => base, DialogV2: { wait: vi.fn(), confirm: vi.fn() } };
 foundry.applications.sheets = { ActorSheet: class { async _onDropItem() { return 'core drop'; } } };
 foundry.utils.escapeHTML = text => text.replaceAll('<', '&lt;');
 globalThis.ui = { notifications: { error: vi.fn(), warn: vi.fn() } };
@@ -26,6 +26,99 @@ const makeSheet = () => {
   sheet.document = { createEmbeddedDocuments: vi.fn() };
   return sheet;
 };
+
+describe('Crawler achievements', () => {
+  const { wait, confirm } = foundry.applications.api.DialogV2;
+  const { editAchievement: edit, deleteAchievement: remove } = PcSheet.DEFAULT_OPTIONS.actions;
+  const entry = { id: 'existing', name: 'First', notes: '' };
+  const target = { dataset: { achievementId: entry.id } };
+  const fixture = () => {
+    const sheet = makeSheet();
+    const source = { achievements: [entry] };
+    sheet.document = { system: { _source: source }, update: vi.fn(async changes => {
+      source.achievements = changes['system.achievements'];
+    }) };
+    sheet._flushForm = vi.fn(async () => true);
+    return { sheet, source };
+  };
+  beforeEach(() => {
+    wait.mockReset();
+    confirm.mockReset();
+  });
+
+  it('adds a separate row and edits the existing row by ID', async () => {
+    const { sheet, source } = fixture();
+    expect(PcSheet.TABS.primary.tabs.slice(-2).map(tab => tab.id)).toEqual(['bio', 'achievements']);
+    wait.mockImplementation(({ buttons }) => buttons[0].callback(null, {
+      form: { elements: { namedItem: name => ({ value: name === 'name' ? '  Second  ' : 'One\nTwo' }) } },
+    }));
+    await edit.call(sheet, null, { dataset: {} });
+    const added = source.achievements[1];
+    expect(added).toEqual({ id: expect.any(String), name: 'Second', notes: 'One\nTwo' });
+    expect(added.id).not.toBe(entry.id);
+
+    wait.mockResolvedValue({ name: 'First revised', notes: 'New notes' });
+    await edit.call(sheet, null, target);
+    expect(source.achievements).toEqual([{ id: entry.id, name: 'First revised', notes: 'New notes' }, added]);
+  });
+
+  it('only deletes on confirmation and leaves other rows intact', async () => {
+    const { sheet, source } = fixture();
+    const other = { id: 'other', name: 'Other', notes: '' };
+    source.achievements.push(other);
+    confirm.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await remove.call(sheet, null, target);
+    expect(sheet.document.update).not.toHaveBeenCalled();
+    await remove.call(sheet, null, target);
+    expect(source.achievements).toEqual([other]);
+  });
+
+  it('does not open an editor or write on a read-only sheet', async () => {
+    const { sheet } = fixture();
+    sheet.isEditable = false;
+    await edit.call(sheet, null, target);
+    await remove.call(sheet, null, target);
+    expect(wait).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
+    expect(sheet.document.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('manual shield slots', () => {
+  const click = CreatureSheet.DEFAULT_OPTIONS.actions.setShieldSlots;
+  const target = { dataset: { slot: '2' } };
+  const shieldSheet = (Sheet, shieldBar) => {
+    const sheet = new Sheet();
+    sheet.isEditable = true;
+    sheet.document = { system: { showShield: true, shieldSlots: 3, shieldBar }, update: vi.fn() };
+    sheet._flushForm = vi.fn(async () => true);
+    return sheet;
+  };
+
+  it.each([PcSheet, MobSheet])('fills through the clicked slot and clears the top slot on %s', async Sheet => {
+    const sheet = shieldSheet(Sheet, 0);
+    await click.call(sheet, null, target);
+    expect(sheet.document.update).toHaveBeenLastCalledWith({ 'system.shieldBar': 2 });
+    sheet.document.system.shieldBar = 2;
+    await click.call(sheet, null, target);
+    expect(sheet.document.update).toHaveBeenLastCalledWith({ 'system.shieldBar': 1 });
+  });
+
+  it('rejects view-only clicks and stale slots after the slot count changes', async () => {
+    const sheet = shieldSheet(MobSheet, 0);
+    sheet.isEditable = false;
+    await click.call(sheet, null, target);
+    expect(sheet._flushForm).not.toHaveBeenCalled();
+
+    sheet.isEditable = true;
+    sheet._flushForm.mockImplementationOnce(async () => {
+      sheet.document.system.shieldSlots = 1;
+      return true;
+    });
+    await click.call(sheet, null, target);
+    expect(sheet.document.update).not.toHaveBeenCalled();
+  });
+});
 
 describe('Healing Potion drop', () => {
   const translations = JSON.parse(readFileSync(new URL('../../lang/en.json', import.meta.url), 'utf8'));

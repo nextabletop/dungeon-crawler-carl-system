@@ -4,6 +4,20 @@ An official Foundry VTT **v14** game system. System id: `dungeon-crawler-carl`
 
 Actor types: **Crawler** (`pc`), **Mob** (`mob`), and **Vehicle / Mount** (`vehicle`). Item types: weapon, skill, spell, gear, attack, race, class.
 
+On Crawler sheets, select the **Hotlist** header to hide or show its shortcuts. The collapsed state is saved on the Crawler.
+
+## Achievements
+
+On Crawler sheets, open **Achievements** after **Bio** to record an achievement's name and notes. Select its name to show or hide the notes. Entries are stored on the Crawler and do not apply rewards automatically.
+
+## Health Bar
+
+Click a **Health Bar** slot to fill through it, or click the highest filled slot again to clear it. On Crawler and Mob sheets, use the header pencil to change the number of slots. Leave the override blank to use the default.
+
+## Shield Bar
+
+On Crawler and Mob sheets, enable **Show Shield Bar** in **Configure Sheet**. Use the Shield Bar pencil to set the slot count and health per slot. Like other section pencils, it appears on hover or keyboard focus and stays visible while editing. Click a slot to fill through it; click the highest filled slot again to clear it. Hiding the bar keeps its values. Shield tracking is manual and does not change the Health Bar or absorb damage automatically.
+
 ## Healing Potions
 
 Drop the reusable Healing Potion Gear Item on a Crawler or Mob and choose Standard, Good, Gold Standard, or Supreme. The resulting Item records that quality and its description; healing and injury effects are applied manually. Existing owned potions and transfers between actors keep their existing details.

@@ -48,8 +48,7 @@
       <span class="lab">{{localize "DCC.Defense.DamageResistanceTotal"}}</span>
     </div>
     <div class="dcc-fbox dcc-pc-pair-start">
-      <span class="bx dcc-pc-view-only">{{systemSource.aiFavor}}</span>
-      <input class="bx dcc-pc-edit-only" type="number" step="1" name="system.aiFavor" value="{{systemSource.aiFavor}}" aria-label="{{localize 'DCC.Header.AiFavor'}}">
+      <input class="bx" type="number" step="1" name="system.aiFavor" value="{{systemSource.aiFavor}}" aria-label="{{localize 'DCC.Header.AiFavor'}}" {{disabled (not editable)}}>
       <span class="lab">{{localize "DCC.Header.AiFavor"}}</span>
     </div>
     <div class="dcc-fbox dcc-pc-pair-end">

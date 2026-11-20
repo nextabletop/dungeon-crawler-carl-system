@@ -1,0 +1,25 @@
+<div class="dcc-box dcc-health dcc-creature-health">
+  <div class="dcc-bar">
+    <span>{{localize "DCC.Health.Bar"}}</span>
+    {{#if health.dying}}<span class="dcc-dying">{{localize dyingLabel}}</span>{{/if}}
+    {{#if editable}}
+    <label class="dcc-edit-toggle" data-tooltip="{{localize 'DCC.Health.Edit'}}">
+      <input type="checkbox" name="system.healthBarEdit" {{checked systemSource.healthBarEdit}}
+             aria-label="{{localize 'DCC.Health.Edit'}}">
+      <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+    </label>
+    {{/if}}
+  </div>
+  {{> "systems/dungeon-crawler-carl/templates/actor/partials/health-bar.hbs"}}
+  {{#if editable}}
+  <div class="dcc-bar-edit-fields">
+    <label class="dcc-field">
+      <span class="dcc-flabel">{{localize "DCC.Settings.HealthBarOverride"}}</span>
+      <input class="dcc-fline" type="number" name="system.healthBarSlotsCustom"
+             value="{{systemSource.healthBarSlotsCustom}}" min="1" max="{{healthBarMaxOverride}}" step="1"
+             aria-describedby="{{rootId}}-health-override-hint">
+    </label>
+    <p class="dcc-health-override-hint" id="{{rootId}}-health-override-hint">{{localize "DCC.Settings.HealthBarOverrideHint"}}</p>
+  </div>
+  {{/if}}
+</div>

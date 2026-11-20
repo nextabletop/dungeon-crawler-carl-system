@@ -1,10 +1,11 @@
 import DCCActorSheetBase, { runGuarded } from './actor-sheet-base.mjs';
-import { ROLL_ABBR, APP_CLASSES } from '../config.mjs';
+import { ROLL_ABBR, APP_CLASSES, HEALTH_BAR_SLOT_GUARD } from '../config.mjs';
 import { abilityRows, sheetItemLists, buffRows, singleFlight } from './sheet-rows.mjs';
 import { postCard } from '../rolls/card.mjs';
 import { DCC_CHANGE_TYPE } from '../effects/dcc-change.mjs';
 import { crewingOf } from '../rules/crew.mjs';
 import { checkFormula } from '../rules/combat.mjs';
+import { clampSlots, slotClickTarget, slotView } from '../rules/health.mjs';
 
 /**
  * Creature layer (pc + mob): ability cards, the health bar context, and the
@@ -14,6 +15,7 @@ export default class DCCCreatureSheet extends DCCActorSheetBase {
   static DEFAULT_OPTIONS = {
     actions: {
       rollAbility: DCCCreatureSheet.#onRollAbility,
+      setShieldSlots: DCCCreatureSheet.#onSetShieldSlots,
       rollEvade: DCCCreatureSheet.#onRollEvade,
       rollSkill: DCCCreatureSheet.#onRollSkill,
       castSpell: DCCCreatureSheet.#onCastSpell,
@@ -34,6 +36,13 @@ export default class DCCCreatureSheet extends DCCActorSheetBase {
     return Object.assign(context, {
       stats: abilityRows(system, source),
       ...this._healthContext(),
+      healthBarMaxOverride: HEALTH_BAR_SLOT_GUARD,
+      shield: system.showShield ? {
+        slots: slotView(system.shieldBar, system.shieldSlots),
+        columns: Math.min(10, system.shieldSlots),
+        gradientSize: system.shieldSlots * 100,
+        maxSlots: HEALTH_BAR_SLOT_GUARD,
+      } : null,
       ...this._prepareItemLists(),
       crewing: this.#crewing(),
     });
@@ -84,6 +93,19 @@ export default class DCCCreatureSheet extends DCCActorSheetBase {
   /* -------------------------------------------- */
   /*  Actions                                     */
   /* -------------------------------------------- */
+
+  static async #onSetShieldSlots(_event, target) {
+    if (!this.isEditable || !this.document.system.showShield) return;
+    const clicked = Number(target.dataset.slot);
+    await runGuarded(async () => {
+      if (!(await this._flushForm())) return;
+      if (!this.isEditable || !this.document.system.showShield) return;
+      const { shieldBar, shieldSlots } = this.document.system;
+      if (!Number.isInteger(clicked) || clicked < 1 || clicked > shieldSlots) return;
+      const current = clampSlots(shieldBar, shieldSlots);
+      await this.document.update({ 'system.shieldBar': slotClickTarget(clicked, current) });
+    });
+  }
 
   #createSkillOrSpell = singleFlight(() => runGuarded(async () => {
     if (!this.isEditable) return;

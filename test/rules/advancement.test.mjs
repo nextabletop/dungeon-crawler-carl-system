@@ -87,15 +87,17 @@ describe('undo stack (~20 deep)', () => {
 
 // New: isDue, reading the Foundry item shape { id, system: { rank, mark,
 // passive } } (like inventory.mjs's items), used by planAdvancement.
-describe('isDue (marked, not passive, and advancesAt holds)', () => {
+describe('isDue (marked and advancesAt holds)', () => {
   it('due when marked, active (non-passive), and advancesAt holds', () => {
     expect(isDue({ id: 'a', system: { rank: 3, mark: true, checkType: 'opposed' } }, 'session')).toBe(true);
   });
   it('not due when unmarked', () => {
     expect(isDue({ id: 'a', system: { rank: 3, mark: false, checkType: 'opposed' } }, 'session')).toBe(false);
   });
-  it('not due when passive, even if marked', () => {
-    expect(isDue({ id: 'a', system: { rank: 3, mark: true, checkType: 'passive' } }, 'session')).toBe(false);
+  it('uses the same rank-based cadence for marked passives', () => {
+    const passive = { id: 'a', system: { rank: 5, mark: true, checkType: 'passive' } };
+    expect(isDue(passive, 'session')).toBe(false);
+    expect(isDue(passive, 'floor')).toBe(true);
   });
   it('not due at the wrong trigger for this rank', () => {
     expect(isDue({ id: 'a', system: { rank: 3, mark: true, checkType: 'opposed' } }, 'floor')).toBe(false);
@@ -140,14 +142,14 @@ describe('planAdvancement', () => {
     expect(updates).toEqual([]);
   });
 
-  it('skips passive rows, even when marked', () => {
+  it('advances a marked passive and clears its mark', () => {
     const { updates } = planAdvancement({
       skills: [{ id: 'a', system: { rank: 3, mark: true, checkType: 'passive' } }],
       trigger: 'session',
       floor: 1,
       rolls: { a: 20 },
     });
-    expect(updates).toEqual([]);
+    expect(updates).toEqual([{ id: 'a', rank: 4, mark: false }]);
   });
 
   it('skips rows not due at this trigger (rank <= 4 advances at session, not floor)', () => {

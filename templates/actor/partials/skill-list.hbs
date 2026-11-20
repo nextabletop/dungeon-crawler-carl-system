@@ -19,10 +19,8 @@
   </span>
   {{#unless lean}}
   <span class="dcc-icell dcc-c-used">
-    {{#if markable}}
     <input class="dcc-icheck dcc-used-check" type="checkbox" id="{{@root.rootId}}-{{id}}-mark" data-field="system.mark" {{checked mark}}
            data-tooltip="{{localize 'DCC.Items.MarkTooltip'}}" aria-label="{{localize 'DCC.Items.Mark'}}">
-    {{/if}}
   </span>
   {{/unless}}
   {{#if lean}}

@@ -103,6 +103,7 @@
       "effect": "DCC Modifier Sheet"
     },
     "Effect": {
+      "FoundryConditions": "Foundry Conditions",
       "ChangeType": "DCC Modifier",
       "ItemTargetLabel": "Target an owned item and aspect",
       "ItemTargetChoose": "Choose an owned item target",
@@ -371,7 +372,18 @@
       "inventory": "Inventory",
       "skills": "Skills",
       "bio": "Bio",
+      "achievements": "Achievements",
       "settings": "Settings"
+    },
+    "Achievement": {
+      "Add": "Add Achievement",
+      "Save": "Save",
+      "Edit": "Edit Achievement",
+      "Delete": "Delete Achievement",
+      "ConfirmDelete": "Delete the achievement “{name}”?",
+      "Empty": "No achievements yet.",
+      "Missing": "This achievement no longer exists.",
+      "NameRequired": "Enter a name for the achievement."
     },
     "Header": {
       "Type": "Type",
@@ -451,11 +463,19 @@
     },
     "Health": {
       "Bar": "Health Bar",
+      "Edit": "Edit Health Bar",
       "Dying": "Dying",
       "Dead": "Dead",
       "Slot": "Slot {n}",
-      "HealthPointsShort": "HP",
-      "HealSlot": "Heal slot"
+      "HealthPointsShort": "HP"
+    },
+    "Shield": {
+      "Bar": "Shield Bar",
+      "Show": "Show Shield Bar",
+      "Edit": "Edit Shield Bar",
+      "Slots": "Shield Slots",
+      "HealthPerSlot": "Shield Health per Slot",
+      "Slot": "Shield slot {n}"
     },
     "Mana": {
       "Label": "Mana",
@@ -758,6 +778,7 @@
     },
     "Hotlist": {
       "Label": "Hotlist",
+      "Collapse": "Collapse Hotlist",
       "Short": "Hot",
       "Toggle": "Show on the hotlist (first {cap})",
       "Cell": "{name} — {action}",

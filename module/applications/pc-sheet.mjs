@@ -40,6 +40,7 @@ const TAB_PARTS = {
   inventory: { template: path('actor/pc/inventory.hbs'), templates: [ACTOR_PARTIALS.itemRow], scrollable: [''] },
   skills: { template: path('actor/pc/skills.hbs'), templates: [ACTOR_PARTIALS.skillList, ACTOR_PARTIALS.itemRow], scrollable: [''] },
   bio: { template: path('actor/pc/bio.hbs'), templates: [ACTOR_PARTIALS.richFields], scrollable: [''] },
+  achievements: { template: path('actor/pc/achievements.hbs'), scrollable: [''] },
 };
 
 export default class PcSheet extends DCCCreatureSheet {
@@ -49,6 +50,8 @@ export default class PcSheet extends DCCCreatureSheet {
     actions: {
       createInventoryItem: PcSheet.#onCreateInventoryItem,
       useHotlist: PcSheet.#onUseHotlist,
+      editAchievement: PcSheet.#onEditAchievement,
+      deleteAchievement: PcSheet.#onDeleteAchievement,
       advancementEndSession: PcSheet.#onAdvancementEndSession,
       advancementEndFloor: PcSheet.#onAdvancementEndFloor,
       advancementLevelUp: PcSheet.#onAdvancementLevelUp,
@@ -74,7 +77,7 @@ export default class PcSheet extends DCCCreatureSheet {
   static PARTS = {
     header: { template: path('actor/pc/header.hbs') },
     abilities: { template: path('actor/pc/abilities.hbs') },
-    vitals: { template: path('actor/pc/vitals.hbs'), templates: [ACTOR_PARTIALS.healthBar] },
+    vitals: { template: path('actor/pc/vitals.hbs'), templates: [ACTOR_PARTIALS.creatureHealth, ACTOR_PARTIALS.healthBar, ACTOR_PARTIALS.shieldBar] },
     combat: COMBAT_PART,
     tabs: { template: 'templates/generic/tab-navigation.hbs' },
     ...TAB_PARTS,
@@ -221,6 +224,78 @@ export default class PcSheet extends DCCCreatureSheet {
     if (skillPotionBonus(item) !== undefined) return this._useSkillPotion(item);
     if (!(await this._flushForm())) return;
     await this.document.useHotlistItem(item);
+  }
+
+  #manageAchievement = singleFlight((id, remove = false) => runGuarded(async () => {
+    if (!this.isEditable || !(await this._flushForm())) return;
+    const read = () => this.document.system._source.achievements;
+    const current = id && read().find(entry => entry.id === id);
+    const missing = () => ui.notifications.warn(game.i18n.localize('DCC.Achievement.Missing'));
+    if ((id || remove) && !current) return missing();
+    const escape = foundry.utils.escapeHTML;
+    let update;
+    if (remove) {
+      if (!await confirmYesNo('DCC.Achievement.Delete',
+        escape(game.i18n.format('DCC.Achievement.ConfirmDelete', { name: current.name })))) return;
+    } else {
+      update = await PcSheet.#achievementDialog(current);
+      if (!update) return;
+    }
+
+    if (!this.isEditable) return;
+    const entries = read();
+    if (id && !entries.some(entry => entry.id === id)) return missing();
+    const achievements = remove ? entries.filter(entry => entry.id !== id)
+      : id ? entries.map(entry => entry.id === id ? { ...entry, ...update } : entry)
+        : [...entries, { id: foundry.utils.randomID(), ...update }];
+    await this.document.update({ 'system.achievements': achievements });
+  }));
+
+  static async #achievementDialog(entry) {
+    const localize = key => game.i18n.localize(key);
+    const escape = foundry.utils.escapeHTML;
+    const title = localize(entry ? 'DCC.Achievement.Edit' : 'DCC.Achievement.Add');
+    let draft = entry || { name: '', notes: '' };
+    while (true) {
+      const result = await foundry.applications.api.DialogV2.wait({
+        window: { title },
+        position: { width: 520 },
+        content: `
+          <div class="form-group stacked">
+            <label for="dcc-achievement-name">${escape(localize('DCC.Sheet.Name'))}</label>
+            <input id="dcc-achievement-name" name="name" type="text" value="${escape(draft.name)}">
+          </div>
+          <div class="form-group stacked">
+            <label for="dcc-achievement-notes">${escape(localize('DCC.Bio.Notes'))}</label>
+            <textarea id="dcc-achievement-notes" name="notes" rows="8">\n${escape(draft.notes)}</textarea>
+          </div>`,
+        buttons: [
+          {
+            action: 'save', label: localize('DCC.Achievement.Save'), default: true,
+            callback: (_event, button) => ({
+              name: button.form.elements.namedItem('name').value.trim(),
+              notes: button.form.elements.namedItem('notes').value,
+            }),
+          },
+          { action: 'cancel', label: localize('COMMON.Cancel'), type: 'button' },
+        ],
+        classes: [...APP_CLASSES],
+        rejectClose: false,
+        modal: true,
+      });
+      if (result === null || result === 'cancel') return null;
+      if (result.name) return result;
+      draft = result;
+      ui.notifications.warn(localize('DCC.Achievement.NameRequired'));
+    }
+  }
+
+  static async #onEditAchievement(_event, target) {
+    await this.#manageAchievement(target.dataset.achievementId);
+  }
+
+  static async #onDeleteAchievement(_event, target) {
+    await this.#manageAchievement(target.dataset.achievementId, true);
   }
 
   /* -------------------------------------------- */

@@ -149,7 +149,6 @@ const skillRow = (item, stats) => {
     opposedAbbr: checkType === 'opposed' ? statAbbr(src.opposedStat) : '',
     isOpposed: src.checkType === 'opposed',
     isPassive,
-    markable: !isPassive,
     onHotlist: src.onHotlist,
   };
   if (item.type === 'spell') {

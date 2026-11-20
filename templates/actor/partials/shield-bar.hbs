@@ -1,0 +1,40 @@
+{{#if shield}}
+<section class="dcc-box dcc-shield">
+  <div class="dcc-bar">
+    <span>{{localize "DCC.Shield.Bar"}}</span>
+    {{#if editable}}
+    <label class="dcc-edit-toggle" data-tooltip="{{localize 'DCC.Shield.Edit'}}">
+      <input type="checkbox" name="system.shieldEdit" {{checked systemSource.shieldEdit}}
+             aria-label="{{localize 'DCC.Shield.Edit'}}">
+      <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+    </label>
+    {{/if}}
+  </div>
+  <div class="dcc-hb" style="--dcc-hb-columns: {{shield.columns}}; --dcc-hb-gradient-size: {{shield.gradientSize}}%">
+    {{#each shield.slots as |slot|}}
+    <div class="dcc-hb-cell" style="--dcc-hb-gradient-position: {{slot.gradientPosition}}%">
+      <button type="button" class="dcc-hb-slot{{#if slot.filled}} filled{{/if}}"
+              data-action="setShieldSlots" data-slot="{{slot.i}}" {{disabled (not @root.editable)}}
+              aria-pressed="{{slot.filled}}" aria-label="{{localize 'DCC.Shield.Slot' n=slot.i}}">
+        <span class="cm">{{@root.system.shieldSlotHealth}}</span>
+      </button>
+      <span class="dcc-hb-percent">{{slot.percent}}%</span>
+    </div>
+    {{/each}}
+  </div>
+  {{#if editable}}
+  <div class="dcc-bar-edit-fields">
+    <label class="dcc-field">
+      <span class="dcc-flabel">{{localize "DCC.Shield.Slots"}}</span>
+      <input class="dcc-fline" type="number" name="system.shieldSlots" value="{{systemSource.shieldSlots}}"
+             min="1" max="{{shield.maxSlots}}" step="1">
+    </label>
+    <label class="dcc-field">
+      <span class="dcc-flabel">{{localize "DCC.Shield.HealthPerSlot"}}</span>
+      <input class="dcc-fline" type="number" name="system.shieldSlotHealth" value="{{systemSource.shieldSlotHealth}}"
+             min="1" step="1">
+    </label>
+  </div>
+  {{/if}}
+</section>
+{{/if}}

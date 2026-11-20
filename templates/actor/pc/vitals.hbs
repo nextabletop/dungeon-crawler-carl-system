@@ -1,10 +1,4 @@
 <div class="dcc-vitals">
-  <div class="dcc-box dcc-health">
-    <div class="dcc-bar">
-      <span>{{localize "DCC.Health.Bar"}}</span>
-      {{#if health.dying}}<span class="dcc-dying">{{localize "DCC.Health.Dying"}}</span>{{/if}}
-      <button type="button" class="dcc-addbtn" data-action="healSlot">{{localize "DCC.Health.HealSlot"}}</button>
-    </div>
-    {{> "systems/dungeon-crawler-carl/templates/actor/partials/health-bar.hbs"}}
-  </div>
+  {{> "systems/dungeon-crawler-carl/templates/actor/partials/creature-health.hbs" dyingLabel="DCC.Health.Dying"}}
+  {{> "systems/dungeon-crawler-carl/templates/actor/partials/shield-bar.hbs"}}
 </div>

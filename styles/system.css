@@ -322,9 +322,6 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 .dcc.sheet.actor.pc .dcc-tab { grid-area: body; height: 100%; }
 .dcc.sheet.actor.pc .dcc-a-hotlist { grid-area: hotlist; }
 .dcc.sheet.actor.pc .dcc-a-abil .dcc-stats { display: flex; flex-direction: column; gap: 8px; }
-.dcc.sheet.actor.pc .dcc-a-abil > .dcc-bar { display: grid; grid-template-columns: 1fr auto 1fr; }
-.dcc.sheet.actor.pc .dcc-a-abil > .dcc-bar > span { grid-column: 2; }
-.dcc.sheet.actor.pc .dcc-a-abil .dcc-pc-abilities-edit { padding: 1px 4px; }
 .dcc.sheet.actor.pc .dcc-a-abil .dcc-stat { gap: 8px; padding: 3px 4px; border: 1px solid var(--d-line); }
 .dcc.sheet.actor.pc .dcc-a-abil .dcc-stat .nm { justify-content: center; text-align: center; }
 .dcc.sheet.actor.pc .dcc-a-abil .dcc-stat-cols { display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; }
@@ -590,10 +587,26 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 .dcc.sheet.actor .dcc-health > .dcc-bar { display: grid; grid-template-columns: 1fr auto 1fr; }
 .dcc.sheet.actor .dcc-health > .dcc-bar > span:not(.dcc-dying) { grid-column: 2; grid-row: 1; }
 .dcc.sheet.actor .dcc-health > .dcc-bar > .dcc-dying { grid-column: 1; grid-row: 1; justify-self: start; }
-.dcc.sheet.actor .dcc-health > .dcc-bar > .dcc-addbtn { grid-column: 3; grid-row: 1; justify-self: end; }
+.dcc.sheet.actor .dcc-creature-health > .dcc-bar > .dcc-dying { grid-column: 3; justify-self: end; }
+.dcc.sheet.actor .dcc-creature-health > .dcc-bar:has(.dcc-edit-toggle) > .dcc-dying { margin-inline-end: 22px; }
 .dcc.sheet.actor .dcc-hb-cell { min-width: 0; text-align: center; container-type: inline-size; }
 .dcc.sheet.actor .dcc-hb-cell .dcc-hb-slot { width: 100%; }
 .dcc.sheet.actor .dcc-hb-percent { display: block; padding-top: 3px; color: var(--d-ink); font-family: var(--d-cond); font-size: clamp(8px, 30cqi, 12px); line-height: 1.2; }
+
+.dcc.sheet.actor .dcc-shield { margin-top: 8px; }
+.dcc.sheet.actor .dcc-bar-edit-fields { display: none; flex-wrap: wrap; justify-content: center; gap: 8px 16px; }
+.dcc.sheet.actor :is(.dcc-creature-health, .dcc-shield):has(> .dcc-bar .dcc-edit-toggle input:checked) > .dcc-bar-edit-fields { display: flex; }
+.dcc.sheet.actor .dcc-bar-edit-fields .dcc-field { flex: 0 1 auto; min-width: 0; align-items: center; text-align: center; }
+.dcc.sheet.actor .dcc-bar-edit-fields input { width: 7ch; text-align: center; }
+.dcc.sheet.actor .dcc-health-override-hint { flex-basis: 100%; text-align: center; }
+.dcc.sheet.actor:is(.pc, .mob) .dcc-shield .dcc-hb-cell .dcc-hb-slot.filled {
+  background-image: linear-gradient(90deg, #087c78, #123759);
+  background-size: var(--dcc-hb-gradient-size) 100%;
+  background-position: var(--dcc-hb-gradient-position) 0;
+}
+.dcc.sheet.actor:is(.pc, .mob) .dcc-shield .dcc-hb-cell:only-child .dcc-hb-slot.filled {
+  background-size: 100% 100%;
+}
 
 /* Mana values and labels */
 .dcc.sheet.actor .dcc-mana,
@@ -735,28 +748,8 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 .dcc.sheet.actor.pc .dcc-pc-mana .dcc-mana-lbl { column-gap: 2px; }
 .dcc.sheet.actor.pc .dcc-pc-mana .dcc-mana :is(.cur, .max) { min-width: 0; max-width: 100%; font-size: 20px; overflow-wrap: anywhere; }
 .dcc.sheet.actor.pc .dcc-pc-mana .dcc-mana .cur { width: 100%; }
-.dcc.sheet.actor.pc .dcc-pc-mana .dcc-mana .max { display: flex; align-items: center; justify-content: center; min-width: 34px; min-height: 26px; padding: 2px 4px; border: 1px solid var(--d-line); border-radius: 3px; background: var(--d-field); color: var(--d-ink); }
+.dcc.sheet.actor.pc .dcc-pc-mana .dcc-mana .max { display: flex; align-items: center; justify-content: center; min-width: 34px; min-height: 26px; padding: 2px 4px; border: none; border-radius: 3px; background: var(--d-field); color: var(--d-ink); }
 .dcc.sheet.actor.pc .dcc-pc-mana .dcc-mana .sep { font-size: 24px; line-height: 1; }
-.dcc.sheet.actor.pc .dcc-pc-combat > .dcc-bar { display: grid; grid-template-columns: 1fr auto 1fr; }
-.dcc.sheet.actor.pc .dcc-pc-combat > .dcc-bar > span { grid-column: 2; }
-.dcc.sheet.actor.pc .dcc-pc-edit-toggle {
-  position: relative;
-  grid-column: 3;
-  justify-self: end;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 7px;
-  border: 1px solid var(--d-bar-text);
-  border-radius: 3px;
-  color: var(--d-bar-text);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-}
-.dcc.sheet.actor.pc .dcc-pc-edit-toggle input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); }
-.dcc.sheet.actor.pc .dcc-pc-edit-toggle:has(input:checked) { border-color: var(--d-hot); background: var(--d-hot); color: #fff; }
-.dcc.sheet.actor.pc .dcc-pc-edit-toggle:has(input:focus-visible) { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 .dcc.sheet.actor.pc .dcc-pc-defense-viewport { overflow-x: auto; }
 .dcc.sheet.actor.pc .dcc-pc-defense-grid {
   display: grid;
@@ -774,8 +767,8 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 .dcc.sheet.actor.pc .dcc-pc-defense-grid .dcc-pc-pair-start { justify-self: end; }
 .dcc.sheet.actor.pc .dcc-pc-defense-grid .dcc-pc-pair-end { justify-self: start; }
 .dcc.sheet.actor.pc .dcc-pc-defense-grid .dcc-fbox .bx { max-width: 100%; overflow-wrap: anywhere; }
-.dcc.sheet.actor.pc .dcc-pc-defense-grid .dcc-fbox :is(span, button).bx:not(.dcc-pc-defense-buff) {
-  border: 1px solid var(--d-line);
+.dcc.sheet.actor.pc .dcc-pc-defense-grid .dcc-fbox span.bx:not(.dcc-pc-defense-buff) {
+  border: none;
   color: var(--d-ink);
 }
 .dcc.sheet.actor.pc .dcc-pc-defense-grid .dcc-fbox button.bx[data-action="rollEvade"] {
@@ -1120,7 +1113,7 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 .dcc:is(.sheet.actor, .sheet.item, .sheet.effect, .dcc-app) .dcc-icontrols { display: flex; justify-content: flex-end; gap: 2px; }
 .dcc:is(.sheet.actor, .sheet.item, .sheet.effect, .dcc-app) .dcc-irow button.icon,
 .dcc:is(.sheet.actor, .sheet.item, .sheet.effect, .dcc-app) .dcc-irow button.icon:hover,
-.dcc.sheet.actor .dcc-mob-edit {
+.dcc.sheet.actor .dcc-edit-toggle {
   flex: none;
   width: 20px;
   height: 20px;
@@ -1134,7 +1127,26 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
   font-size: 12px;
 }
 .dcc:is(.sheet.actor, .sheet.item, .sheet.effect, .dcc-app) .dcc-irow button.icon:not(:disabled):hover { color: var(--d-accent); }
-.dcc.sheet.actor .dcc-mob-edit:hover { color: var(--d-accent); }
+.dcc.sheet.actor .dcc-edit-toggle:hover { color: var(--d-accent); }
+.dcc.sheet.actor .dcc-edit-toggle {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+}
+.dcc.sheet.actor :is(.dcc-a-abil, .dcc-pc-combat, .dcc-creature-health, .dcc-shield, .dcc-mob-combat, .dcc-mob-abilities-card) > .dcc-bar { position: relative; }
+.dcc.sheet.actor .dcc-bar > .dcc-edit-toggle { top: 50%; transform: translateY(-50%); }
+.dcc.sheet.actor :is(.dcc-a-abil, .dcc-pc-combat, .dcc-creature-health, .dcc-shield, .dcc-mob-combat, .dcc-mob-abilities-card):is(:hover, :focus-within) .dcc-edit-toggle,
+.dcc.sheet.actor .dcc-edit-toggle:has(input:checked) { opacity: 1; }
+@media (hover: none) {
+  .dcc.sheet.actor .dcc-edit-toggle { opacity: 1; }
+}
+.dcc.sheet.actor .dcc-edit-toggle input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); }
+.dcc.sheet.actor .dcc-edit-toggle input:focus-visible + i { outline: 2px solid var(--d-accent); outline-offset: 3px; }
+.dcc.sheet.actor .dcc-edit-toggle input:checked + i { color: var(--d-accent); }
 .dcc:is(.sheet.actor, .sheet.item, .sheet.effect, .dcc-app) .dcc-irow button.icon.dcc-itoggle { font-size: 16px; }
 .dcc:is(.sheet.actor, .sheet.item, .sheet.effect, .dcc-app) .dcc-irow:not(.dcc-irow--off) button.icon.dcc-itoggle { color: var(--d-accent); }
 
@@ -1223,7 +1235,30 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 }
 .dcc.sheet.actor .dcc-addbtns { display: flex; gap: 4px; }
 
-/* Hotlist strip (header bottom, every tab). */
+.dcc.sheet.actor.pc .dcc-achievements { list-style: none; margin: 0; padding: 0; }
+.dcc.sheet.actor.pc .dcc-achievement { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.dcc.sheet.actor.pc .dcc-achievement summary { cursor: pointer; font-weight: 700; overflow-wrap: anywhere; }
+.dcc.sheet.actor.pc .dcc-achievement-notes { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dcc.sheet.actor.pc .dcc-achievement-notes:empty { display: none; }
+
+/* Hotlist strip (sheet bottom, every tab). */
+.dcc.sheet.actor .dcc-hot-bar { position: relative; }
+.dcc.sheet.actor .dcc-hot-bar:has(.dcc-hot-toggle:enabled) { cursor: pointer; }
+.dcc.sheet.actor .dcc-hot-bar .dcc-hot-toggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.dcc.sheet.actor .dcc-hot-bar:has(.dcc-hot-toggle:focus-visible) { outline: 2px solid var(--d-accent); outline-offset: -2px; }
+.dcc.sheet.actor .dcc-hot-caret::before { content: "\25BE"; }
+.dcc.sheet.actor .dcc-hot-toggle:checked + .dcc-hot-caret::before { content: "\25B8"; }
+.dcc.sheet.actor .dcc-hot-bar:has(.dcc-hot-toggle:checked) { margin-bottom: 0; }
+.dcc.sheet.actor .dcc-hot-bar:has(.dcc-hot-toggle:checked) + .dcc-hot-grid { display: none; }
 .dcc.sheet.actor .dcc-hot-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; }
 .dcc.sheet.actor .dcc-hot-cell {
   position: relative;
@@ -1426,7 +1461,6 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 
 /* Mob combat totals and editable bases. */
 .dcc.sheet.actor .dcc-mobstrip {
-  position: relative;
   padding: 6px 8px;
   border: none;
   border-radius: 5px;
@@ -1439,7 +1473,6 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
   align-items: start;
   gap: 2px;
   overflow-x: auto;
-  padding-right: 24px;
   padding-bottom: 4px;
 }
 .dcc.sheet.actor .dcc-mob-combat-stat {
@@ -1459,17 +1492,8 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.dcc.sheet.actor .dcc-mob-edit { position: absolute; top: 6px; right: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; }
-.dcc.sheet.actor :is(.dcc-mobstrip, .dcc-mob-abilities):is(:hover, :focus-within) .dcc-mob-edit,
-.dcc.sheet.actor .dcc-mob-edit:has(input:checked) { opacity: 1; }
-@media (hover: none) {
-  .dcc.sheet.actor :is(.dcc-mobstrip, .dcc-mob-abilities) .dcc-mob-edit { opacity: 1; }
-}
-.dcc.sheet.actor .dcc-mob-edit input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); }
-.dcc.sheet.actor .dcc-mob-edit input:focus-visible + i { outline: 2px solid var(--d-accent); outline-offset: 3px; }
-.dcc.sheet.actor .dcc-mob-edit input:checked + i { color: var(--d-accent); }
 .dcc.sheet.actor .dcc-mob-edit-fields { display: none; grid-auto-flow: column; grid-auto-columns: max-content; align-items: start; gap: 4px; }
-.dcc.sheet.actor :is(.dcc-mobstrip, .dcc-mob-abilities):has(.dcc-mob-edit input:checked) .dcc-mob-edit-fields { display: grid; }
+.dcc.sheet.actor :is(.dcc-mob-combat, .dcc-mob-abilities-card):has(> .dcc-bar .dcc-edit-toggle input:checked) .dcc-mob-edit-fields { display: grid; }
 .dcc.sheet.actor .dcc-mob-part { display: grid; justify-items: center; gap: 2px; }
 .dcc.sheet.actor .dcc-mob-input,
 .dcc.sheet.actor .dcc-mob-derived {
@@ -1499,7 +1523,7 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 }
 
 /* Mob abilities: enhanced score and modifier, with editable bases. */
-.dcc.sheet.actor .dcc-mob-abilities { position: relative; padding: 6px 8px; }
+.dcc.sheet.actor .dcc-mob-abilities { padding: 6px 8px; }
 .dcc.sheet.actor .dcc-mob .dcc-stat { container-type: inline-size; align-items: center; gap: 8px; padding: 4px 0; border: none; }
 .dcc.sheet.actor .dcc-mob .dcc-stats { grid-template-columns: repeat(5, minmax(80px, 1fr)); gap: 8px; overflow-x: auto; padding: 0 16px 4px; }
 .dcc.sheet.actor .dcc-mob .dcc-statmod { min-width: 42px; height: 26px; min-height: 0; align-items: center; justify-content: center; padding: 0 6px; font-size: 13px; font-variant: small-caps; letter-spacing: 0.06em; text-transform: none; }
@@ -1513,7 +1537,7 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 /* Lean item lists (mob): no mark / stat+rank (attacks) / check / passive / hotlist columns. */
 .dcc.sheet.actor .dcc-ilist--attacks.dcc-ilist--lean { --dcc-mob-attack-size: 11px; }
 .dcc.sheet.actor .dcc-ilist--attacks.dcc-ilist--lean > .dcc-mob-attack-row {
-  grid-template-columns: minmax(0, 1fr) 12px 12px;
+  grid-template-columns: minmax(0, 1fr) 20px 12px;
   grid-template-areas:
     "main edit delete"
     "notes notes notes";
@@ -1567,7 +1591,6 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
   white-space: nowrap;
   overflow-wrap: normal;
 }
-.dcc.sheet.actor .dcc-irow > .dcc-mob-attack-edit,
 .dcc.sheet.actor .dcc-irow > .dcc-mob-attack-delete {
   width: 12px;
   min-width: 12px;
@@ -1946,7 +1969,8 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
   border: 1px solid #000;
 }
 .dcc:is(.sheet.item, .sheet.effect, .dcc-app) :is(input, select, textarea):disabled { opacity: 0.7; }
-.dcc:is(.sheet.item, .sheet.effect, .dcc-app) .hint {
+.dcc:is(.sheet.item, .sheet.effect, .dcc-app) .hint,
+.dcc.sheet.actor .dcc-health-override-hint {
   margin: 0;
   font-family: var(--d-cond);
   font-size: 11px;
@@ -2014,7 +2038,14 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
 }
 
 /* Configure Sheet: the DCC settings fieldset above core's sheet / theme choices. */
-.dcc.dcc-app.dcc-sheet-config .window-content { gap: 8px; padding: 8px 10px; }
+.dcc.dcc-app.dcc-sheet-config .window-content {
+  gap: 8px;
+  padding: 8px 10px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.dcc.dcc-app.dcc-sheet-config .window-content > * { flex-shrink: 0; }
+.dcc.dcc-app.dcc-sheet-config .dcc-auto-enable-cast > label { white-space: nowrap; }
 .dcc.dcc-app.dcc-sheet-config input[type="checkbox"]:not(:checked)::before {
   outline: 1px solid var(--d-ink-dim);
   outline-offset: -1px;

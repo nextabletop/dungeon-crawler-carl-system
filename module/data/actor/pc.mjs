@@ -16,6 +16,12 @@ export default class PcModel extends CreatureModel {
       aiFavor: int(0),
       pcCombatEdit: bool(false),
       pcAbilitiesEdit: bool(false),
+      hotlistCollapsed: bool(false),
+      achievements: new fields.ArrayField(new fields.SchemaField({
+        id: str('', { blank: false }),
+        name: str('', { blank: false }),
+        notes: str('', { trim: false }),
+      }), { required: true, nullable: false, initial: [] }),
       pendingLevels: int(0),
       statPoints: int(0),
       undoStack: new fields.ArrayField(new fields.ObjectField(), { required: true, initial: [] }),

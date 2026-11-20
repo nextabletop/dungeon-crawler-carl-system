@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 class CoreEffectConfig {
   async _onRender() {}
@@ -35,6 +36,21 @@ describe('owned effect target options', () => {
 describe('effect editor form behavior', () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it('renames the native conditions field without changing its label association', async () => {
+    const label = { textContent: 'Status Conditions', htmlFor: 'effect-statuses' };
+    const english = JSON.parse(readFileSync(new URL('../../lang/en.json', import.meta.url), 'utf8'));
+    vi.stubGlobal('game', {
+      i18n: { localize: key => key.split('.').reduce((entry, part) => entry?.[part], english) },
+    });
+    const sheet = new EffectSheet();
+    sheet.element = {
+      querySelector: selector => selector === '.form-group.statuses > label' ? label : null,
+      querySelectorAll: () => [],
+    };
+    await sheet._onRender({}, {});
+    expect(label).toEqual({ textContent: 'Foundry Conditions', htmlFor: 'effect-statuses' });
+  });
+
   const fixture = async ({ parent = actor, typeValue = 'dcc', keyValue = 'strength', editable = true } = {}) => {
     const make = tag => ({
       tag, children: [], value: '', hidden: false,
@@ -58,7 +74,7 @@ describe('effect editor form behavior', () => {
     const sheet = new EffectSheet();
     sheet.document = { parent };
     sheet.isEditable = editable;
-    sheet.element = { querySelectorAll: () => [row] };
+    sheet.element = { querySelector: () => null, querySelectorAll: () => [row] };
     await sheet._onRender({}, {});
     const select = row.container.querySelector('select');
     if (select) select.closest = () => row;

@@ -6,7 +6,6 @@ import {
   UNDO_MAX, RANK_CAP, RANK_CAP_DEEP, RANK_CAP_DEEP_FLOOR, LEVEL_UP_MIN_FLOOR, ADVANCING_TYPES,
 } from '../config.mjs';
 import { isActive } from './engine.mjs';
-import { isPassiveCheck } from './items.mjs';
 
 /** A manual Skill Check succeeds when the d20 equals or exceeds the base Rank. */
 export const skillCheckSuccess = (rank, d20) => (+d20 || 0) >= Math.max(0, +rank || 0);
@@ -44,11 +43,11 @@ export const undoPop = (stack) => {
 };
 
 // Is `skill` due to advance at `trigger`? A Foundry item, shaped like
-// inventory.mjs's items: { id, system: { rank, mark, checkType } }. Due means
-// marked, not passive, and advancesAt(rank, trigger) holds.
+// inventory.mjs's items: { id, system: { rank, mark } }. Due means
+// marked and advancesAt(rank, trigger) holds, regardless of check type.
 export const isDue = (skill, trigger) => {
   const system = skill?.system || {};
-  return isActive(system.mark) && !isPassiveCheck(system) && advancesAt(system.rank, trigger);
+  return isActive(system.mark) && advancesAt(system.rank, trigger);
 };
 
 // New pure function replacing R20's processAdvancement worker

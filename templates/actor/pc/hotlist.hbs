@@ -2,8 +2,14 @@
       gear / weapons, skills tab for skills / spells), first hotlistCap grouped by type (gear, weapon, skill, spell), by sort within a type. A click runs
       DCCActor#useHotlistItem. Empty cells are inert spans. --}}
 <div class="dcc-a-hotlist dcc-box">
-  <div class="dcc-bar">{{localize "DCC.Hotlist.Label"}}</div>
-  <div class="dcc-hot-grid">
+  <label class="dcc-bar dcc-hot-bar">
+    <input type="checkbox" class="dcc-hot-toggle" name="system.hotlistCollapsed"
+           {{checked systemSource.hotlistCollapsed}} {{disabled (not editable)}}
+           aria-label="{{localize 'DCC.Hotlist.Collapse'}}" aria-controls="{{rootId}}-hotlist-grid">
+    <span class="dcc-hot-caret" aria-hidden="true"></span>
+    <span>{{localize "DCC.Hotlist.Label"}}</span>
+  </label>
+  <div class="dcc-hot-grid" id="{{rootId}}-hotlist-grid">
     {{#each hotlist}}
     {{#if this}}
     <button type="button" class="dcc-hot-cell filled" id="{{@root.rootId}}-{{id}}-hotlist" data-item-id="{{id}}" data-action="useHotlist"

@@ -75,11 +75,14 @@ describe('chat settings UI', () => {
 });
 
 describe('Health Bar UI', () => {
-  it('exposes a nullable override to PCs and Mobs only', () => {
-    const template = readFileSync(new URL('../../templates/actor/sheet-config.hbs', import.meta.url), 'utf8');
-    expect(template).toContain('{{#if (or (eq dccType "pc") (eq dccType "mob"))}}');
-    expect(template).toContain('name="system.healthBarSlotsCustom"');
-    expect(template).toContain('value="{{systemSource.healthBarSlotsCustom}}" min="1" max="100" step="1"');
+  it('moves the nullable override out of Configure Sheet and behind the editable creature Health Bar pencil', () => {
+    const config = readFileSync(new URL('../../templates/actor/sheet-config.hbs', import.meta.url), 'utf8');
+    const template = readFileSync(new URL('../../templates/actor/partials/creature-health.hbs', import.meta.url), 'utf8');
+    const css = readFileSync(new URL('../../styles/system.css', import.meta.url), 'utf8');
+    expect(config).not.toContain('name="system.healthBarSlotsCustom"');
+    expect(template).toMatch(/{{#if editable}}\s*<label class="dcc-edit-toggle"[^>]*>[\s\S]*?name="system.healthBarEdit"/);
+    expect(template).toMatch(/{{#if editable}}\s*<div class="dcc-bar-edit-fields">[\s\S]*?name="system.healthBarSlotsCustom"\s+value="{{systemSource.healthBarSlotsCustom}}" min="1" max="{{healthBarMaxOverride}}" step="1"/);
+    expect(css).toContain(':is(.dcc-creature-health, .dcc-shield):has(> .dcc-bar .dcc-edit-toggle input:checked) > .dcc-bar-edit-fields { display: flex; }');
   });
 
   describe('movement controls', () => {
@@ -154,12 +157,12 @@ describe('Health Bar UI', () => {
         expect(css).toMatch(/\.dcc-pc-evade-name \{[^}]*display: flex; align-items: center;[^}]*white-space: nowrap;/);
       });
 
-      it('offers owners a persisted edit toggle for all five source fields', () => {
+      it('offers owners a persisted edit toggle for Combat fields other than AI Favor', () => {
         expect(combat).toMatch(/{{#if editable}}[\s\S]*name="system\.pcCombatEdit" {{checked systemSource\.pcCombatEdit}}[\s\S]*{{\/if}}/);
-        for (const field of ['armor', 'moveBase', 'stepBase', 'aiFavor', 'size']) {
+        for (const field of ['armor', 'moveBase', 'stepBase', 'size']) {
           expect(defenses).toContain(`name="system.${field}" value="{{systemSource.${field}}}"`);
         }
-        for (const field of ['armor', 'aiFavor', 'size']) {
+        for (const field of ['armor', 'size']) {
           expect(defenses).toContain(`class="bx dcc-pc-view-only">{{systemSource.${field}}}`);
         }
         expect(css).toContain('.dcc-pc-combat .dcc-pc-edit-only { display: none; }');
@@ -168,8 +171,13 @@ describe('Health Bar UI', () => {
         expect(css).toContain('.dcc-pc-defense-viewport { overflow-x: auto; }');
       });
 
-      it('underlines Combat inputs and gives boxed displays consistent themed borders and text', () => {
-        expect(css).toMatch(/\.dcc\.sheet\.actor\.pc \.dcc-pc-defense-grid \.dcc-fbox :is\(span, button\)\.bx:not\(\.dcc-pc-defense-buff\) \{\s*border: 1px solid var\(--d-line\);\s*color: var\(--d-ink\);/);
+      it('keeps AI Favor an underlined number input outside Combat edit mode', () => {
+        expect(defenses).toMatch(/<input class="bx" type="number"[^>]*name="system\.aiFavor" value="{{systemSource\.aiFavor}}"[^>]*{{disabled \(not editable\)}}>/);
+        expect(defenses).not.toContain('class="bx dcc-pc-view-only">{{systemSource.aiFavor}}');
+      });
+
+      it('underlines Combat inputs and leaves read-only values borderless', () => {
+        expect(css).toMatch(/\.dcc\.sheet\.actor\.pc \.dcc-pc-defense-grid \.dcc-fbox span\.bx:not\(\.dcc-pc-defense-buff\) \{\s*border: none;\s*color: var\(--d-ink\);/);
         expect(css).toMatch(/\.dcc\.sheet\.actor\.pc \.dcc-pc-defense-grid \.dcc-fbox input\.bx \{\s*border: none;\s*border-bottom: 1px solid var\(--d-line\);\s*border-radius: 0;\s*background: transparent;/);
         expect(css).toContain('.dcc-pc-defense-grid .dcc-fbox input.bx:focus-visible { outline: 2px solid var(--d-accent);');
       });
@@ -193,7 +201,7 @@ describe('Health Bar UI', () => {
         expect(css).toMatch(/\.dcc-pc-mana \{[^}]*grid-column: 9; grid-row: 1 \/ span 2; grid-template-rows: auto auto; align-self: center; gap: 2px;/);
         expect(css).toMatch(/\.dcc-pc-mana-title \{[^}]*text-align: center;/);
         expect(css).toContain('.dcc-pc-mana .dcc-mana .sep { font-size: 24px; line-height: 1; }');
-        expect(css).toMatch(/\.dcc-pc-mana \.dcc-mana \.max \{[^}]*border: 1px solid var\(--d-line\);[^}]*background: var\(--d-field\);[^}]*color: var\(--d-ink\);/);
+        expect(css).toMatch(/\.dcc-pc-mana \.dcc-mana \.max \{[^}]*border: none;[^}]*background: var\(--d-field\);[^}]*color: var\(--d-ink\);/);
       });
     });
   });
@@ -202,7 +210,7 @@ describe('Health Bar UI', () => {
     const template = readFileSync(new URL('../../templates/actor/mob/body.hbs', import.meta.url), 'utf8');
     const header = template.slice(template.indexOf('<header'), template.indexOf('</header>'));
     const abilities = template.slice(template.indexOf('{{localize "DCC.Abilities"}}'), template.indexOf('actor/partials/attack-list.hbs'));
-    const combat = template.slice(template.indexOf('<div class="dcc-mobstrip">'), template.indexOf('actor/partials/unresolved.hbs'));
+    const combat = template.slice(template.indexOf('<div class="dcc-box dcc-mob-combat">'), template.indexOf('actor/partials/unresolved.hbs'));
 
     it('places editable Level and Surprise in combat, not the header', () => {
       for (const field of ['level', 'surprise']) {
@@ -285,7 +293,7 @@ describe('Health Bar UI', () => {
     });
 
     it('places Abilities immediately after Combat and before Attacks', () => {
-      expect(template).toMatch(/actor\/partials\/unresolved\.hbs"[^}]*}}\s*<\/div>\s*<div class="dcc-box">\s*<div class="dcc-bar">{{localize "DCC\.Abilities"}}[\s\S]*?{{> "systems\/dungeon-crawler-carl\/templates\/actor\/partials\/attack-list\.hbs"/);
+      expect(template).toMatch(/actor\/partials\/unresolved\.hbs"[^}]*}}\s*<\/div>\s*<div class="dcc-box dcc-mob-abilities-card">\s*<div class="dcc-bar">\s*<span>{{localize "DCC\.Abilities"}}<\/span>[\s\S]*?{{> "systems\/dungeon-crawler-carl\/templates\/actor\/partials\/attack-list\.hbs"/);
     });
 
     it('uses a Mob-only readable type hierarchy with uppercase headings and consistent title-case labels', () => {
@@ -324,7 +332,7 @@ describe('Health Bar UI', () => {
       expect(abilities).toContain('class="dcc-mob-abilities"');
       expect(abilities).not.toContain('dcc-mob-abilities--with-mana');
       expect(abilities).toContain('class="dcc-stats" role="region" aria-label="{{localize \'DCC.Abilities\'}}" tabindex="0"');
-      expect(css).toContain('.dcc.sheet.actor .dcc-mob-abilities { position: relative; padding: 6px 8px; }');
+      expect(css).toContain('.dcc.sheet.actor .dcc-mob-abilities { padding: 6px 8px; }');
       expect(css).toContain('.dcc.sheet.actor .dcc-mob .dcc-stats { grid-template-columns: repeat(5, minmax(80px, 1fr)); gap: 8px; overflow-x: auto; padding: 0 16px 4px; }');
       expect(css).not.toContain('.dcc-mob-abilities--with-mana');
     });
@@ -357,9 +365,9 @@ describe('Health Bar UI', () => {
       expect(combat).toContain('name="system.mobCombatEdit"');
       expect(combat).toContain('class="fa-solid fa-pen-to-square" aria-hidden="true"');
       expect(itemRow).toContain('class="icon fa-solid fa-pen-to-square"');
-      expect(css).toMatch(/\.dcc-irow button\.icon:hover,\s*\.dcc\.sheet\.actor \.dcc-mob-edit \{[^}]*width: 20px;[^}]*height: 20px;[^}]*color: var\(--d-ink-dim\);/);
-      expect(css).toContain('.dcc-mob-edit input:focus-visible + i');
-      expect(css).toContain('.dcc-mob-edit input:checked + i');
+      expect(css).toMatch(/\.dcc-irow button\.icon:hover,\s*\.dcc\.sheet\.actor \.dcc-edit-toggle \{[^}]*width: 20px;[^}]*height: 20px;[^}]*color: var\(--d-ink-dim\);/);
+      expect(css).toContain('.dcc-edit-toggle input:focus-visible + i');
+      expect(css).toContain('.dcc-edit-toggle input:checked + i');
       for (const value of ['mobSurprise', 'mobEvade', 'mobMove', 'damageResistance']) {
         expect(combat).toContain(`{{system.${value}}}`);
       }
@@ -373,9 +381,14 @@ describe('Health Bar UI', () => {
       expect(css).toMatch(/\.dcc\.sheet\.actor \.dcc-mob-total \{[^}]*font-size: 26px;/);
       expect(css).toMatch(/\.dcc\.sheet\.actor \.dcc-mob-combat-grid \{[^}]*grid-auto-flow: column;[^}]*grid-auto-columns: minmax\(80px, 1fr\);[^}]*overflow-x: auto;/);
       expect(css).toMatch(/\.dcc\.sheet\.actor \.dcc-mob-combat-grid \{[^}]*gap: 2px;[^}]*padding-bottom: 4px;/);
-      expect(css).toContain(':is(.dcc-mobstrip, .dcc-mob-abilities):has(.dcc-mob-edit input:checked) .dcc-mob-edit-fields');
-      expect(css).toMatch(/:is\(\.dcc-mobstrip, \.dcc-mob-abilities\):is\(:hover, :focus-within\) \.dcc-mob-edit,\s*\.dcc\.sheet\.actor \.dcc-mob-edit:has\(input:checked\) \{ opacity: 1; \}/);
+      expect(css).toContain(':is(.dcc-mob-combat, .dcc-mob-abilities-card):has(> .dcc-bar .dcc-edit-toggle input:checked) .dcc-mob-edit-fields');
+      expect(css).toMatch(/:is\([^)]*\.dcc-shield, \.dcc-mob-combat, \.dcc-mob-abilities-card\):is\(:hover, :focus-within\) \.dcc-edit-toggle,\s*\.dcc\.sheet\.actor \.dcc-edit-toggle:has\(input:checked\) \{ opacity: 1; \}/);
       expect(css).toContain('@media (hover: none)');
+    });
+
+    it('places each Mob edit pencil in its own header, before the editable fields', () => {
+      expect(combat).toMatch(/<div class="dcc-bar">\s*<span>{{localize "DCC.Tab.combat"}}<\/span>[\s\S]*?name="system.mobCombatEdit"[^>]*>[\s\S]*?<\/label>\s*{{\/if}}\s*<\/div>\s*<div class="dcc-mobstrip">/);
+      expect(abilities).toMatch(/{{localize "DCC.Abilities"}}<\/span>[\s\S]*?name="system.mobAbilitiesEdit"[^>]*>[\s\S]*?<\/label>\s*{{\/if}}\s*<\/div>\s*<div class="dcc-mob-abilities">/);
     });
 
     it('edits Mob To-Hit on each Attack instead of showing a global target', () => {
@@ -423,16 +436,19 @@ describe('Health Bar UI', () => {
     expect(vehicle).toMatch(/<input[^>]*type="number"[^>]*min="0"[^>]*name="system\.constitutionModifier"[^>]*value="{{systemSource\.constitutionModifier}}"[^>]*placeholder="5"/);
   });
 
-  it('shows actor slot percentages below the blocks without removing the heal control', () => {
+  it('shows actor slot percentages and uses the clickable blocks instead of a separate Heal Slot button', () => {
+    const creature = readFileSync(new URL('../../templates/actor/partials/creature-health.hbs', import.meta.url), 'utf8');
     const mob = readFileSync(new URL('../../templates/actor/mob/body.hbs', import.meta.url), 'utf8');
     const pc = readFileSync(new URL('../../templates/actor/pc/vitals.hbs', import.meta.url), 'utf8');
     const vehicle = readFileSync(new URL('../../templates/actor/vehicle/body.hbs', import.meta.url), 'utf8');
     const template = readFileSync(new URL('../../templates/actor/partials/health-bar.hbs', import.meta.url), 'utf8');
     const css = readFileSync(new URL('../../styles/system.css', import.meta.url), 'utf8');
-    for (const sheet of [mob, pc, vehicle]) {
-      expect(sheet).toContain('actor/partials/health-bar.hbs"}}');
-      expect(sheet).toMatch(/<div class="dcc-box dcc-health">[\s\S]*?<div class="dcc-bar">[\s\S]*?<button[^>]*class="dcc-addbtn"[^>]*data-action="healSlot"[\s\S]*?<\/div>/);
+    for (const sheet of [mob, pc]) expect(sheet).toContain('actor/partials/creature-health.hbs"');
+    for (const card of [creature, vehicle]) {
+      expect(card).toContain('actor/partials/health-bar.hbs"}}');
+      expect(card).not.toContain('data-action="healSlot"');
     }
+    expect(vehicle).not.toContain('actor/partials/creature-health.hbs"');
     expect(template).toMatch(/<\/button>\s*<span class="dcc-hb-percent">{{slot\.percent}}%<\/span>/);
     expect(template).not.toContain('system.healthPoints');
     expect(template).not.toContain('data-action="healSlot"');
@@ -449,14 +465,15 @@ describe('Health Bar UI', () => {
       [7, '84, 56%, 29%'], [8, '98, 54%, 27%'], [9, '110, 56%, 25%'], [10, '122, 58%, 23%'],
     ]) expect(css).toContain(`.dcc-hb-slot.filled.tier-${tier} { background: hsl(${hue}); }`);
     expect(css).toContain('.dcc-health > .dcc-bar > .dcc-dying { grid-column: 1; grid-row: 1; justify-self: start; }');
-    expect(css).toContain('.dcc-health > .dcc-bar > .dcc-addbtn { grid-column: 3; grid-row: 1; justify-self: end; }');
   });
 
   it('distinguishes dead Mobs from dying Crawlers', () => {
     const mob = readFileSync(new URL('../../templates/actor/mob/body.hbs', import.meta.url), 'utf8');
     const pc = readFileSync(new URL('../../templates/actor/pc/vitals.hbs', import.meta.url), 'utf8');
-    expect(mob).toContain('{{#if health.dying}}<span class="dcc-dying">{{localize "DCC.Health.Dead"}}');
-    expect(pc).toContain('{{#if health.dying}}<span class="dcc-dying">{{localize "DCC.Health.Dying"}}');
+    const creature = readFileSync(new URL('../../templates/actor/partials/creature-health.hbs', import.meta.url), 'utf8');
+    expect(mob).toContain('dyingLabel="DCC.Health.Dead"');
+    expect(pc).toContain('dyingLabel="DCC.Health.Dying"');
+    expect(creature).toContain('{{#if health.dying}}<span class="dcc-dying">{{localize dyingLabel}}');
   });
 });
 
@@ -555,12 +572,20 @@ describe('abilityRows', () => {
   it('lets owners toggle base-score inputs with an icon-only control', () => {
     const template = readFileSync(new URL('../../templates/actor/pc/abilities.hbs', import.meta.url), 'utf8');
     const css = readFileSync(new URL('../../styles/system.css', import.meta.url), 'utf8');
-    expect(template).toMatch(/{{#if editable}}[\s\S]*?class="dcc-pc-edit-toggle dcc-pc-abilities-edit"[\s\S]*?name="system\.pcAbilitiesEdit" {{checked systemSource\.pcAbilitiesEdit}} aria-label="{{localize 'DCC\.Ability\.Edit'}}"[\s\S]*?<i class="fa-solid fa-pen-to-square" aria-hidden="true"><\/i>\s*<\/label>\s*{{\/if}}/);
+    expect(template).toMatch(/{{#if editable}}[\s\S]*?class="dcc-edit-toggle dcc-pc-abilities-edit"[\s\S]*?name="system\.pcAbilitiesEdit" {{checked systemSource\.pcAbilitiesEdit}} aria-label="{{localize 'DCC\.Ability\.Edit'}}"[\s\S]*?<i class="fa-solid fa-pen-to-square" aria-hidden="true"><\/i>\s*<\/label>\s*{{\/if}}/);
     expect(template).toContain('<span class="dcc-statenh dcc-statbase-view">{{s.base}}</span>');
     expect(template).toContain('name="system.stats.{{s.key}}.base" value="{{s.base}}"');
     expect(css).toContain('.dcc-a-abil:has(.dcc-pc-abilities-edit input:checked) .dcc-statbase { display: block; }');
     expect(css).toContain('.dcc-a-abil:has(.dcc-pc-abilities-edit input:checked) .dcc-statbase-view { display: none; }');
-    expect(css).toContain('.dcc-pc-edit-toggle:has(input:focus-visible) { outline: 2px solid var(--d-accent);');
+    expect(css).toContain('.dcc-edit-toggle input:focus-visible + i { outline: 2px solid var(--d-accent);');
+  });
+
+  it('uses the Shield Bar’s icon-only toggle in the Crawler Combat header', () => {
+    const combat = readFileSync(new URL('../../templates/actor/pc/combat.hbs', import.meta.url), 'utf8');
+    const shield = readFileSync(new URL('../../templates/actor/partials/shield-bar.hbs', import.meta.url), 'utf8');
+    for (const template of [combat, shield]) {
+      expect(template).toMatch(/{{#if editable}}\s*<label class="dcc-edit-toggle\b[^>]*>[\s\S]*?<input type="checkbox"[^>]*aria-label="[^"]+"[^>]*>\s*<i class="fa-solid fa-pen-to-square" aria-hidden="true"><\/i>\s*<\/label>\s*{{\/if}}/);
+    }
   });
 
   it('spaces Crawler ability cards and uses an underlined base input', () => {
@@ -815,7 +840,7 @@ describe('sheetItemLists', () => {
     expect(list).toMatch(/{{#if notes}}\s*<span class="dcc-attack-notes">{{notes}}<\/span>\s*{{\/if}}/);
     expect(list.indexOf('dcc-attack-notes')).toBeLessThan(list.indexOf('{{#each skillUses}}'));
     expect(list).toContain('data-tooltip="{{#if ../../mob}}{{damageLabel}}{{else}}{{localize \'DCC.Roll.Damage\'}}{{/if}}"');
-    expect(css).toMatch(/\.dcc-ilist--attacks\.dcc-ilist--lean > \.dcc-mob-attack-row \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 12px 12px;/);
+    expect(css).toMatch(/\.dcc-ilist--attacks\.dcc-ilist--lean > \.dcc-mob-attack-row \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) 20px 12px;/);
     expect(css).toMatch(/\.dcc-mob-attack-main \{[\s\S]*?grid-template-columns: 20px auto auto minmax\(0, 1fr\);/);
     expect(list).toMatch(/class="dcc-mob-attack-damage-range">[\s\S]*?class="dcc-c-dmg">[\s\S]*?<span class="dcc-mob-attack-range"/);
     expect(css).toContain('.dcc-mob-attack-damage-range { display: flex; align-items: center; min-width: 0; gap: 6px; }');
@@ -876,10 +901,10 @@ describe('sheetItemLists', () => {
       ],
     });
     expect(skills[0]).toMatchObject({
-      checkType: 'opposed', opposedStat: 'charisma', isOpposed: true, isPassive: false, markable: true,
+      checkType: 'opposed', opposedStat: 'charisma', isOpposed: true, isPassive: false, mark: true,
     });
     expect(skills[1]).toMatchObject({
-      checkType: 'passive', isOpposed: false, isPassive: true, markable: false,
+      checkType: 'passive', isOpposed: false, isPassive: true, mark: true,
     });
   });
   it('skill rows expose populated authored metadata without Notes', () => {

@@ -23,7 +23,7 @@ export default class MobSheet extends DCCCreatureSheet {
     body: {
       template: path('actor/mob/body.hbs'),
       templates: [
-        ACTOR_PARTIALS.healthBar, ACTOR_PARTIALS.defenses, ACTOR_PARTIALS.unresolved,
+        ACTOR_PARTIALS.creatureHealth, ACTOR_PARTIALS.healthBar, ACTOR_PARTIALS.shieldBar, ACTOR_PARTIALS.defenses, ACTOR_PARTIALS.unresolved,
         ACTOR_PARTIALS.attackList, ACTOR_PARTIALS.skillList, ACTOR_PARTIALS.buffList, ACTOR_PARTIALS.itemRow,
         ACTOR_PARTIALS.crewing,
       ],

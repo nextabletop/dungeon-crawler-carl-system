@@ -1,0 +1,32 @@
+<section class="tab dcc-tab {{tab.cssClass}}" data-group="primary" data-tab="achievements">
+  <div class="dcc-box dcc-list">
+    <div class="dcc-bar dcc-bar--list">
+      <span>{{localize "DCC.Tab.achievements"}}</span>
+      {{#if editable}}
+      <button type="button" class="dcc-addbtn" data-action="editAchievement">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> {{localize "DCC.Achievement.Add"}}
+      </button>
+      {{/if}}
+    </div>
+    <ul class="dcc-achievements">
+      {{#each systemSource.achievements}}
+      <li class="dcc-irow dcc-achievement">
+        <details>
+          <summary>{{name}}</summary>
+          <p class="dcc-achievement-notes">{{notes}}</p>
+        </details>
+        {{#if @root.editable}}
+        <div class="dcc-icontrols">
+          <button type="button" class="icon fa-solid fa-pen-to-square" data-action="editAchievement" data-achievement-id="{{id}}"
+                  data-tooltip aria-label="{{localize 'DCC.Achievement.Edit'}}"></button>
+          <button type="button" class="icon fa-solid fa-trash" data-action="deleteAchievement" data-achievement-id="{{id}}"
+                  data-tooltip aria-label="{{localize 'DCC.Achievement.Delete'}}"></button>
+        </div>
+        {{/if}}
+      </li>
+      {{else}}
+      <li class="dcc-iempty">{{localize "DCC.Achievement.Empty"}}</li>
+      {{/each}}
+    </ul>
+  </div>
+</section>
