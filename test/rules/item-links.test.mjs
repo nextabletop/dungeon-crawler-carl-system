@@ -158,6 +158,53 @@ describe('Attack source links', () => {
 });
 
 describe('granted Attacks', () => {
+  it.each([
+    ['Stick of Good Goblin Dynamite', '2d6', '5ft Blast radius +5ft Splash'],
+    ['Stick of Basic Dynamite', '1d6', '0ft Blast radius +5ft Splash'],
+  ])('creates and links the configured %s Attack once, without an ability damage bonus', async (name, die, range) => {
+    const source = new DCCItem({
+      id: 'dynamite', type: 'gear', name,
+      system: { linkedItemIds: [], description: '<p>Explosive.</p>' },
+      flags: { 'dungeon-crawler-carl': { grantedAttack: {
+        die, damageType: 'Bludgeoning', range,
+      } } },
+    });
+    const actor = actorWith(source);
+    await source._onCreate({}, {}, undefined);
+    const attack = grantedAttack(source, actor.items.contents);
+    expect(attack.system).toMatchObject({
+      stat: '', mobToHitNone: true, primarySkillId: '', die, damageStat: '', damageBonus: 0,
+      damageType: 'Bludgeoning', range,
+      description: source.system.description,
+    });
+    expect(attackSource(attack, actor.items.contents)).toBe(source);
+    expect(source.system.linkedItemIds).toEqual([attack.id]);
+    await source._onCreate({}, {}, undefined);
+    expect(actor.createEmbeddedDocuments).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not grant an Attack to ordinary Gear and rejects invalid configured defaults', async () => {
+    const source = new DCCItem({
+      id: 'gear', type: 'gear', name: 'Gear', system: { linkedItemIds: [] },
+    });
+    const actor = actorWith(source);
+    await source._onCreate({}, {}, undefined);
+    expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+    source.flags = { 'dungeon-crawler-carl': { grantedAttack: { die: '2d6' } } };
+    await expect(source._onCreate({}, {}, undefined)).rejects.toThrow('Invalid Attack defaults');
+    expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+  });
+
+  it('lets a Race application manage Attack creation synchronously', async () => {
+    const source = new DCCItem({
+      id: 'source', type: 'skill', name: 'Bow',
+      system: { rank: 0, isAttack: true, linkedItemIds: [] },
+    });
+    const actor = actorWith(source);
+    await source._onCreate({}, { dccSkipGrantedAttack: true }, undefined);
+    expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+  });
+
   it('creates and links one Attack from an owned Skill/Spell, idempotently', async () => {
     const source = item('spell', 'spell', [], { stat: 'intelligence', rank: 3, isAttack: true });
     source.name = 'Magic Missile';

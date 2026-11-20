@@ -1,6 +1,7 @@
 import {
   createGrantedAttack, linkedItemIdsToDelete, removeGrantedAttack, setAttackSource,
 } from '../rules/item-links.mjs';
+import { SYSTEM_ID } from '../config.mjs';
 
 export default class DCCItem extends foundry.documents.Item {
   async setAttackSource(sourceId = '') {
@@ -11,7 +12,9 @@ export default class DCCItem extends foundry.documents.Item {
     await super._onCreate?.(data, options, userId);
     if (userId && userId !== game.user.id) return;
     if (!this.parent?.items) return;
+    if (options.dccSkipGrantedAttack) return;
     if (['skill', 'spell'].includes(this.type) && this.system.isAttack) await createGrantedAttack(this);
+    if (this.type === 'gear' && this.flags?.[SYSTEM_ID]?.grantedAttack) await createGrantedAttack(this);
   }
 
   async _onUpdate(changed, options, userId) {

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { CHECK_TYPES, STATS } from '../../module/config.mjs';
 import { CreatureModel, PcModel, MobModel, VehicleModel, GmScreenModel, actorModels } from '../../module/data/actor/_module.mjs';
 import {
-  WeaponModel, SkillModel, SpellModel, GearModel, AttackModel, itemModels,
+  WeaponModel, SkillModel, SpellModel, GearModel, AttackModel, RaceModel, ClassModel, itemModels,
 } from '../../module/data/item/_module.mjs';
 import DCCEffectModel from '../../module/data/effect/effect-model.mjs';
 
@@ -189,13 +189,15 @@ describe('item schemas', () => {
       .toEqual(Object.fromEntries(['', ...STATS].map(stat => [stat, stat])));
   });
 
-  it('itemModels maps all five item types', () => {
+  it('itemModels maps all item types', () => {
     expect(itemModels).toEqual({
       weapon: WeaponModel,
       skill: SkillModel,
       spell: SpellModel,
       gear: GearModel,
       attack: AttackModel,
+      race: RaceModel,
+      class: ClassModel,
     });
   });
 });

@@ -2,7 +2,7 @@
 // inline item-edit plumbing. PURE (no Foundry globals) so they are unit-tested
 // directly; the sheets call them from _prepareContext / _onChangeForm.
 
-import { STATS, GEAR_SLOTS, HOTLIST_CAP, ACCESSORY_CAP, DEFAULT_ITEM_ICONS } from '../config.mjs';
+import { SYSTEM_ID, STATS, GEAR_SLOTS, HOTLIST_CAP, ACCESSORY_CAP, DEFAULT_ITEM_ICONS } from '../config.mjs';
 import { buildGear, buildAccessories } from '../rules/inventory.mjs';
 import { describeChange } from '../effects/dcc-change.mjs';
 import { levelUpBlocker } from '../rules/advancement.mjs';
@@ -237,15 +237,25 @@ export const crewRows = (crew, resolve, kind) => (crew ?? []).map(({ uuid, role 
   };
 });
 
-/** Actor-level effect rows (Buffs & Debuffs), in sort order. */
-export const buffRows = (effects = [], items = []) => [...effects].sort(bySort).map(effect => ({
-  id: effect.id,
-  name: effect.name,
-  img: effect.img,
-  disabled: effect.disabled,
-  notes: htmlToText(effect.description),
-  changes: (effect.system?.changes ?? []).map(change => describeChange(change, items)).join(', '),
-}));
+/** Actor effects and explicitly listed item Buffs, in sort order. */
+export const buffRows = (effects = [], items = []) => {
+  const entries = [
+    ...effects.map(effect => ({ effect })),
+    ...items.flatMap(item => (item.effects?.contents ?? []).filter(effect =>
+      effect.flags?.[SYSTEM_ID]?.showInBuffs).map(effect => ({ effect, itemId: item.id }))),
+  ];
+  return entries.sort((a, b) => bySort(a.effect, b.effect)).map(({ effect, itemId }) => ({
+    id: effect.id,
+    rowId: itemId ? `${itemId}-${effect.id}` : effect.id,
+    itemId,
+    name: effect.name,
+    img: effect.img,
+    disabled: effect.disabled,
+    suppressed: Boolean(itemId && effect.isSuppressed),
+    notes: htmlToText(effect.description),
+    changes: (effect.system?.changes ?? []).map(change => describeChange(change, items)).join(', '),
+  }));
+};
 
 // ── Inventory tab + hotlist ──
 
@@ -262,6 +272,7 @@ const inventoryRow = (item, occupants) => {
     name: item.name,
     img: item.img,
     isWeapon: item.type === 'weapon',
+    isSkillPotion: item.type === 'gear' && item.flags?.['dungeon-crawler-carl']?.skillPotion?.rankBonus != null,
     quantity: src.quantity,
     slot: src.slot,
     active: src.active,
