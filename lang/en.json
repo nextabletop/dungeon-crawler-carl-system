@@ -17,6 +17,10 @@
     }
   },
   "DCC": {
+    "Token": {
+      "InvalidHealthBar": "Enter a valid Health Bar slot value.",
+      "HealthBarMigrationFailed": "Could not update existing token Health Bars. See the console; the migration will retry next time the world opens."
+    },
     "ConfigurableGear": {
       "Title": "Configure Gear",
       "Replace": "An item already in the selected slot will be moved to the pack.",

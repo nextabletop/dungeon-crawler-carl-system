@@ -24,6 +24,16 @@ export default class DCCActor extends foundry.documents.Actor {
     return super.createDialog(data, createOptions, { ...options, types }, renderOptions);
   }
 
+  async _preCreate(data, options, user) {
+    const allowed = await super._preCreate(data, options, user);
+    if (allowed === false) return false;
+    if (options.fromCompendium && !this.inCompendium && ['pc', 'mob', 'vehicle'].includes(this.type)
+      && this.prototypeToken?.bar1?.attribute === 'healthPoints') {
+      this.updateSource({ 'prototypeToken.bar1.attribute': 'healthBar' });
+    }
+    return allowed;
+  }
+
   /**
    * Core Actor#getRollData returns only `this.system`. Merge (not replace) the
    * model's short keys on top, so both `@stats.dexterity.modifier` and `@dex` resolve.
@@ -97,7 +107,21 @@ export default class DCCActor extends foundry.documents.Actor {
    * @override
    */
   async modifyTokenAttribute(attribute, value, isDelta = false, isBar = true) {
-    const result = await super.modifyTokenAttribute(attribute, value, isDelta, isBar);
+    let result;
+    if (attribute === 'healthBar' && isBar) {
+      if (!Number.isFinite(value)) {
+        ui.notifications.warn(game.i18n.localize('DCC.Token.InvalidHealthBar'));
+        result = this;
+      } else {
+        const next = clampSlots(Math.trunc(isDelta ? this.currentSlots + value : value), this.system.healthBarSlots);
+        const updates = { 'system.healthBar': next };
+        result = next !== this.currentSlots && Hooks.call('modifyTokenAttribute', { attribute, value, isDelta, isBar }, updates, this) !== false
+          ? await this.update(updates)
+          : this;
+      }
+    } else {
+      result = await super.modifyTokenAttribute(attribute, value, isDelta, isBar);
+    }
     const hud = globalThis.canvas?.hud?.token;
     if (hud?.rendered && (hud.actor === this)) hud.render();
     return result;

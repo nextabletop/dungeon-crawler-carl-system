@@ -36,7 +36,7 @@
     }
   },
   "grid": { "type": 1, "distance": 5, "units": "ft", "diagonals": 0 },
-  "primaryTokenAttribute": "healthPoints",
+  "primaryTokenAttribute": "healthBar",
   "secondaryTokenAttribute": "mana",
   "socket": false
 }

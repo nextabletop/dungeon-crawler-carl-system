@@ -142,6 +142,7 @@ class MockDataModel {
 class MockDocument {
   constructor(data = {}) { Object.assign(this, data); }
   getRollData() { return this.system; }
+  async _preCreate() {}
 }
 class MockActor extends MockDocument {
   async getTokenDocument(data = {}, options = {}) {

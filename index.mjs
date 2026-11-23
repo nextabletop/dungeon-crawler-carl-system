@@ -4,6 +4,7 @@ import { itemModels } from './module/data/item/_module.mjs';
 import DCCEffectModel from './module/data/effect/effect-model.mjs';
 import { registerDccChangeType } from './module/effects/dcc-change.mjs';
 import DCCActor from './module/documents/actor.mjs';
+import DCCTokenDocument from './module/documents/token.mjs';
 import DCCItem from './module/documents/item.mjs';
 import PcSheet from './module/applications/pc-sheet.mjs';
 import MobSheet from './module/applications/mob-sheet.mjs';
@@ -15,10 +16,12 @@ import { TEMPLATE as CARD_TEMPLATE } from './module/rolls/card.mjs';
 import { ACTOR_PARTIALS } from './module/applications/actor-sheet-base.mjs';
 import { registerCrewHooks } from './module/crew-hooks.mjs';
 import { registerGmScreenSetting, registerGmScreenHooks } from './module/gm-link.mjs';
+import { registerHealthBarMigration, migrateHealthBarTokens } from './module/health-bar-migration.mjs';
 
 Hooks.once('init', () => {
   CONFIG.DCC = { ...config };
   CONFIG.Actor.documentClass = DCCActor;
+  CONFIG.Token.documentClass = DCCTokenDocument;
   CONFIG.Item.documentClass = DCCItem;
   Object.assign(CONFIG.Actor.dataModels, actorModels);
   Object.assign(CONFIG.Item.dataModels, itemModels);
@@ -38,4 +41,12 @@ Hooks.once('init', () => {
   registerCrewHooks();
   registerGmScreenSetting();
   registerGmScreenHooks();
+  registerHealthBarMigration();
+});
+
+Hooks.once('ready', () => {
+  migrateHealthBarTokens().catch(err => {
+    ui.notifications.error(game.i18n.localize('DCC.Token.HealthBarMigrationFailed'));
+    console.error('DCC | Health Bar token migration failed', err);
+  });
 });
