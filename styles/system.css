@@ -1927,6 +1927,7 @@ body.theme-dark .dcc:is(.sheet, .dcc-app):not(.theme-light),
   font-weight: 700;
 }
 .dcc:is(.sheet.item, .sheet.effect, .dcc-app) :is(input:is([type="text"], [type="number"], :not([type])), select) { height: 26px; }
+.dcc.dcc-app select.dcc-benefit-multiselect[multiple] { height: auto; }
 .dcc:is(.sheet.item, .sheet.effect, .dcc-app) :is(input, select, textarea):focus {
   border-color: var(--d-accent);
   outline: none;

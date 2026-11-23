@@ -49,6 +49,20 @@ describe('deriveCreature — stats, health, defenses', () => {
     expect(d.healthPoints.value).toBe(60);
   });
 
+  it.each(['strength', 'intelligence', 'constitution', 'dexterity', 'charisma'])('uses the selected %s modifier for health', (healthStat) => {
+    const d = deriveCreature(pc({ healthStat, healthBar: 6, stats: stats({ [healthStat]: 20 }) }));
+    expect(d.healthModifier).toBe(5);
+    expect(d.healthPoints).toEqual({ value: 30, max: 50 });
+  });
+
+  it('uses the modified selected Stat and defaults old actors to Constitution', () => {
+    const source = pc({ healthBar: 6, stats: stats({ constitution: 6, charisma: 10 }) });
+    expect(deriveCreature(source).healthPoints).toEqual({ value: 18, max: 30 });
+    const selected = deriveCreature({ ...source, healthStat: 'charisma', modifiers: [{ target: 'charisma', value: '10' }] });
+    expect(selected.healthPoints).toEqual({ value: 30, max: 50 });
+    expect(selected.stats.constitution.modifier).toBe(3);
+  });
+
   it('flat stat modifier: strength +2 on base 1 -> enhancement 3 -> modifier 2', () => {
     const d = deriveCreature(pc({ modifiers: [{ target: 'strength', value: '2' }] }));
     expect(d.stats.strength).toEqual({ base: 1, enhancement: 3, modifier: 2 });
@@ -536,7 +550,7 @@ const allFinite = (v) => {
   return true;
 };
 const CREATURE_KEYS = [
-  'stats', 'healthBarSlots', 'healthBar', 'healthPoints', 'manaMax', 'evade', 'damageResistance', 'move', 'step',
+  'stats', 'healthBarSlots', 'healthBar', 'healthPoints', 'healthModifier', 'manaMax', 'evade', 'damageResistance', 'move', 'step',
   'moveBonus', 'stepBonus', 'evadeBonus', 'evadeDice', 'evadeBuffLabel', 'evadeRollLabel',
   'damageResistanceBonus', 'mobEvade', 'mobSurprise', 'mobMove', 'items', 'unresolved',
 ];

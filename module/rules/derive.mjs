@@ -131,6 +131,7 @@ const deriveItemRow = (item, context) => {
  * @param {number} input.floor
  * @param {number} input.healthBar - stored health, in slots
  * @param {number|null} [input.healthBarSlotsCustom] - optional PC/Mob slot count
+ * @param {string} [input.healthStat] - Health Bar Stat, defaults to Constitution
  * @param {number} input.armor - DR base
  * @param {number} input.moveBase
  * @param {number} input.stepBase
@@ -143,7 +144,7 @@ const deriveItemRow = (item, context) => {
  * @param {Iterable<{id:string, type:string, name:string, system:object}>} input.items - any iterable (a Map yields its values); items without an id are ignored
  * @returns {{
  *   stats: Record<string,{base:number, enhancement:number, modifier:number}>,
- *   healthBarSlots: number, healthBar: number, healthPoints: {value:number, max:number},
+ *   healthBarSlots: number, healthBar: number, healthPoints: {value:number, max:number}, healthModifier: number,
  *   manaMax: number, evade: number, damageResistance: number, move: number, step: number,
  *   moveBonus: number, stepBonus: number, evadeBonus: number, evadeDice: string,
  *   evadeBuffLabel: string, evadeRollLabel: string, damageResistanceBonus: number,
@@ -179,13 +180,14 @@ export const deriveCreature = (input = {}) => {
   const modifierFor = (stat) => (STATS.includes(stat) ? modifierByStat[stat] : 0);
 
   // Health Bar: slot count by type, healthBar clamped, healthPoints mirrors
-  // healthBar x Con Mod.
+  // healthBar x the selected Stat modifier.
   const healthBarSlots = healthBarSlotsFor(input.type, input.level, undefined, input.healthBarSlotsCustom);
   const healthBar = clampSlots(+input.healthBar || 0, healthBarSlots);
-  const constitutionModifier = modifierByStat.constitution;
+  const healthStat = STATS.includes(input.healthStat) ? input.healthStat : 'constitution';
+  const healthModifier = modifierByStat[healthStat];
   const healthPoints = {
-    value: healthPointsFromHealthBar(healthBar, constitutionModifier),
-    max: maxHealthPointsFromConstitution(constitutionModifier, healthBarSlots),
+    value: healthPointsFromHealthBar(healthBar, healthModifier),
+    max: maxHealthPointsFromConstitution(healthModifier, healthBarSlots),
   };
 
   // Mana and defenses.
@@ -215,7 +217,7 @@ export const deriveCreature = (input = {}) => {
   }
 
   return {
-    stats, healthBarSlots, healthBar, healthPoints, manaMax, evade, damageResistance, move, step,
+    stats, healthBarSlots, healthBar, healthPoints, healthModifier, manaMax, evade, damageResistance, move, step,
     moveBonus: move - (+input.moveBase || 0),
     stepBonus: step - (+input.stepBase || 0),
     evadeBonus, evadeDice, evadeBuffLabel, evadeRollLabel,

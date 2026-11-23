@@ -5,7 +5,7 @@
 import { HEALTH_BAR_MAX_SLOTS } from '../config.mjs';
 
 // `healthBar` is the source of truth. healthPoints = healthBar x
-// Con Mod, max healthPoints = slot count x Con Mod. Damage divides by Con Mod with the
+// Health Bar modifier, max healthPoints = slot count x that modifier. Damage divides by it with the
 // remainder shrugged (DCC rules); the token-linked healthPoints mirror is
 // refunded back to a clean multiple.
 
@@ -21,7 +21,7 @@ export const healthPointsFromHealthBar = (healthBar, constitutionModifier) => (+
 export const maxHealthPointsFromConstitution = (constitutionModifier, slots) => slotMax(slots) * (+constitutionModifier || 0);
 
 // Whole slots removed by an (already DR-adjusted) damage amount. A hit smaller
-// than one Con Mod is shrugged entirely; the remainder of a larger hit is lost.
+// than one Health Bar modifier is shrugged entirely; the remainder of a larger hit is lost.
 export const damageToSlots = (effective, constitutionModifier) => {
   const e = +effective || 0;
   const c = +constitutionModifier || 0;
@@ -39,7 +39,7 @@ export const damageToSlots = (effective, constitutionModifier) => {
  * @param {number} healthBar - current health in slots.
  * @param {number} damage - incoming damage in hit points, before DR.
  * @param {number} damageResistance - in hit points, subtracted first.
- * @param {number} constitutionModifier - Con Mod (hit points per slot).
+ * @param {number} constitutionModifier - Health Bar modifier (hit points per slot).
  * @param {number} [max] - slot cap; defaults to HEALTH_BAR_MAX_SLOTS (see slotMax).
  * @returns {{healthBar: number, healthPoints: number, slotsLost: number}}
  */
@@ -57,11 +57,11 @@ export const directDamage = (healthBar, damage, damageResistance, constitutionMo
 /**
  * React to a user-entered healthPoints value (token bubble). Convert the delta
  * to whole slots, shrug the sub-slot remainder, and refund healthPoints to a
- * clean multiple so the mirror always equals healthBar x Con Mod. Healing is
+ * clean multiple so the mirror always equals healthBar x the Health Bar modifier. Healing is
  * chunked symmetrically.
  * @param {number} oldHealthBar - current health in slots.
  * @param {number} enteredHealthPoints - the value the user typed, in hit points.
- * @param {number} constitutionModifier - Con Mod (hit points per slot).
+ * @param {number} constitutionModifier - Health Bar modifier (hit points per slot).
  * @param {number} [max] - slot cap; defaults to HEALTH_BAR_MAX_SLOTS (see slotMax).
  * @returns {{healthBar: number, healthPoints: number}}
  */

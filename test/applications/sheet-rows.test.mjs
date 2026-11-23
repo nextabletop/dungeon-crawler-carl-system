@@ -80,6 +80,8 @@ describe('Health Bar UI', () => {
     expect(template).toContain('{{#if (or (eq dccType "pc") (eq dccType "mob"))}}');
     expect(template).toContain('name="system.healthBarSlotsCustom"');
     expect(template).toContain('value="{{systemSource.healthBarSlotsCustom}}" min="1" max="100" step="1"');
+    expect(template).toContain('name="system.healthStat"');
+    expect(template).toContain('selected=systemSource.healthStat');
   });
 
   describe('movement controls', () => {

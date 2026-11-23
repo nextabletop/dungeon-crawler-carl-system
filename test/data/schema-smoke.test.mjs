@@ -41,6 +41,15 @@ describe('actor schemas', () => {
     expect(keys(VehicleModel)).not.toContain('healthBarSlotsCustom');
   });
 
+  it('PCs and Mobs default their Health Bar Stat to Constitution and accept all Stats', () => {
+    for (const model of [PcModel, MobModel]) {
+      const field = model.defineSchema().healthStat;
+      expect(field.initial).toBe('constitution');
+      expect(field.options.choices).toEqual(Object.fromEntries(STATS.map(s => [s, s])));
+    }
+    expect(keys(VehicleModel)).not.toContain('healthStat');
+  });
+
   it('stats has exactly the 5 STATS, each with base initial 1', () => {
     const { stats } = CreatureModel.defineSchema();
     expect(Object.keys(stats.fields)).toEqual(STATS);

@@ -222,6 +222,19 @@ describe('model _preUpdate: healthPoints edits become slot changes', () => {
   it('creature healthConstitutionModifier is the constitution stat mod', () => {
     expect(pc(6, 10).healthConstitutionModifier).toBe(3);
   });
+
+  it.each([PcModel, MobModel])('uses Charisma for the Health Bar and token HP edits on %s', async (Model) => {
+    const m = prepare(Model, creatureSource({
+      level: 10, healthBar: 6, healthStat: 'charisma',
+      stats: stats({ constitution: 6, charisma: 20 }), mana: { value: 0, max: 0 },
+    }));
+    expect(m.healthConstitutionModifier).toBe(5);
+    expect(m.stats.constitution.modifier).toBe(3);
+    expect(m.healthPoints).toEqual({ value: 30, max: 50 });
+    const c = changes({ 'system.healthPoints.value': 22 });
+    await m._preUpdate(c, {}, {});
+    expect(c.system.healthBar).toBe(5);
+  });
 });
 
 describe('DCCActor health methods', () => {
@@ -237,6 +250,14 @@ describe('DCCActor health methods', () => {
     await a.applyDamage(9); // 9 - 2 = 7 -> floor(7/3) = 2 slots
     expect(a.update).toHaveBeenCalledTimes(1);
     expect(a.update).toHaveBeenCalledWith({ 'system.healthBar': 8 });
+  });
+
+  it('applyDamage uses the selected Health Bar modifier', async () => {
+    const a = actorFor(prepare(PcModel, pcSource({
+      healthStat: 'charisma', stats: stats({ constitution: 6, charisma: 20 }), healthBar: 10,
+    })));
+    await a.applyDamage(9);
+    expect(a.update).toHaveBeenCalledWith({ 'system.healthBar': 9 });
   });
 
   it('applyDamage on a vehicle includes DR and uses healthConstitutionModifier', async () => {

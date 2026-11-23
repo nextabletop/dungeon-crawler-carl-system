@@ -292,6 +292,30 @@ describe('Crawler Race drop', () => {
     expect(ui.notifications.error).not.toHaveBeenCalled();
   });
 
+  it('shows multiple Race choices in a scrollable list and returns both selections', async () => {
+    const sheet = makeSheet();
+    sheet.actor = { isOwner: true };
+    sheet._flushForm = vi.fn(async () => true);
+    foundry.applications.api.DialogV2.wait.mockImplementation(async dialog => {
+      expect(dialog.content).toMatch(/<select[^>]*class="dcc-benefit-multiselect" multiple size="8"/);
+      return dialog.buttons[0].callback(null, {
+        form: { elements: { namedItem: () => ({ selectedOptions: [{ value: '1' }, { value: '9' }] }) } },
+      });
+    });
+    dropRace.mockImplementation(async (_actor, _item, handlers) => {
+      expect(await handlers.choose([{
+        label: 'Choose two', count: 2, options: Array.from({ length: 10 }, (_, i) => ({ label: `Skill ${i}` })),
+      }])).toEqual([[1, 9]]);
+    });
+    await sheet._onDropItem({}, { type: 'race', name: 'Dwarf, Classic' });
+    expect(ui.notifications.error).not.toHaveBeenCalled();
+    const css = readFileSync(new URL('../../styles/system.css', import.meta.url), 'utf8');
+    expect(css).toMatch(/select\.dcc-benefit-multiselect\[multiple\]\s*\{[^}]*height:\s*auto/);
+    expect(css.indexOf('select.dcc-benefit-multiselect[multiple]')).toBeGreaterThan(
+      css.indexOf('select) { height: 26px; }'),
+    );
+  });
+
   it('does not apply a Race if saving pending edits fails', async () => {
     const sheet = makeSheet();
     sheet.actor = { isOwner: true };

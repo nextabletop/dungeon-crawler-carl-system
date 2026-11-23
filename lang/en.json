@@ -321,6 +321,8 @@
       "AutoEnableCastHint": "Casting a spell turns its skill modifiers on.",
       "HealthBarOverride": "Health Bar Override",
       "HealthBarOverrideHint": "Leave blank for the default: 10 for Crawlers, or the Mob's level (maximum 10). Custom bars can have 1–100 slots.",
+      "HealthStat": "Health Bar Ability",
+      "HealthStatHint": "The ability modifier used for each Health Bar slot.",
       "ChatExtras": "Attack and Spell Chat Cards",
       "ShowRangeInChat": "Show Range in chat",
       "ShowRangeInChatHint": "Show Range on Attack rolls and Spell casts.",

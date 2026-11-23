@@ -76,6 +76,15 @@
       </div>
       <p class="hint">{{localize "DCC.Settings.HealthBarOverrideHint"}}</p>
     </div>
+    <div class="form-group">
+      <label for="{{rootId}}-healthStat">{{localize "DCC.Settings.HealthStat"}}</label>
+      <div class="form-fields">
+        <select id="{{rootId}}-healthStat" name="system.healthStat" {{disabled (not canEdit)}}>
+          {{selectOptions statOptions selected=systemSource.healthStat localize=true}}
+        </select>
+      </div>
+      <p class="hint">{{localize "DCC.Settings.HealthStatHint"}}</p>
+    </div>
   </fieldset>
   {{/if}}
   {{#unless (eq dccType "gmscreen")}}

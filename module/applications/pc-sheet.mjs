@@ -116,7 +116,8 @@ export default class PcSheet extends DCCCreatureSheet {
       </fieldset>` : `
       <div class="form-group">
         <label for="dcc-race-choice-${index}">${escape(choice.label)} (${choice.count})</label>
-        <select id="dcc-race-choice-${index}" name="choice-${index}" ${choice.count > 1 ? 'multiple' : ''}>
+        <select id="dcc-race-choice-${index}" name="choice-${index}" ${choice.count > 1
+          ? `class="dcc-benefit-multiselect" multiple size="${Math.min(8, choice.options.length)}"` : ''}>
           ${choice.count === 1 ? '<option value="" selected disabled>—</option>' : ''}
           ${choice.options.map((option, optionIndex) => `<option value="${optionIndex}">${escape(option.label)}</option>`).join('')}
         </select>

@@ -13,9 +13,8 @@ const DERIVED_ITEM_TYPES = new Set(['attack', 'skill', 'spell']);
  * - `healthBarSlots` — health-bar slot count; `healthBarDisplay` — stored
  *   `healthBar` clamped to [0, healthBarSlots] for display. The stored
  *   `healthBar` itself is left untouched.
- * - `healthPoints.value`, `healthPoints.max` — healthBar x Con Mod
- * - `healthConstitutionModifier` — the Con Mod the health bar uses (hit
- *   points per slot): the constitution stat modifier
+ * - `healthPoints.value`, `healthPoints.max` — healthBar x selected Stat Mod
+ * - `healthConstitutionModifier` — the selected Health Bar modifier (hit points per slot)
  * - `evade`, `evadeBonus`, `evadeDice`, `evadeBuffLabel`, `evadeRollLabel`, and
  *   `damageResistance`, `move`, `step` with their bonuses (the stored bases are `armor`,
  *   `moveBase`, `stepBase`; movement bonuses include percentage effects)
@@ -41,6 +40,7 @@ export default class CreatureModel extends foundry.abstract.TypeDataModel {
       )),
       healthBar: int(10, { min: 0 }),
       healthBarSlotsCustom: new fields.NumberField({ required: true, nullable: true, integer: true, min: 1, max: HEALTH_BAR_SLOT_GUARD, initial: null }),
+      healthStat: str('constitution', { choices: STATS }),
       healthPoints: pool(),
       armor: int(0),
       moveBase: int(20),
@@ -68,6 +68,7 @@ export default class CreatureModel extends foundry.abstract.TypeDataModel {
       floor: this.floor,
       healthBar: this.healthBar,
       healthBarSlotsCustom: this.healthBarSlotsCustom,
+      healthStat: this.healthStat,
       armor: this.armor,
       moveBase: this.moveBase,
       stepBase: this.stepBase,
@@ -85,7 +86,7 @@ export default class CreatureModel extends foundry.abstract.TypeDataModel {
       this.stats[s].enhancement = d.stats[s].enhancement;
       this.stats[s].modifier = d.stats[s].modifier;
     }
-    this.healthConstitutionModifier = d.stats.constitution.modifier;
+    this.healthConstitutionModifier = d.healthModifier;
     this.evade = d.evade;
     this.damageResistance = d.damageResistance;
     this.move = d.move;
