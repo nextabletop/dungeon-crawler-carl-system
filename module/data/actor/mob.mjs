@@ -12,6 +12,7 @@ export default class MobModel extends CreatureModel {
       descriptors: str(),
       surprise: int(10, { nullable: true }),
       mobEvadeBase: int(10, { nullable: true }),
+      mobCrawlerAttacks: bool(false),
       mana: pool(),
       mobCombatEdit: bool(false),
       mobAbilitiesEdit: bool(false),

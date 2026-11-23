@@ -6,6 +6,7 @@
       {{formGroup systemFields.stat value=systemSource.stat options=selectOptions.attackStat rootId=rootId}}
       {{formGroup systemFields.rank value=attackLink.rank disabled=attackLink.rankLinked rootId=rootId}}
       {{#if showMobToHit}}
+      {{#if showMobToHitBase}}
       <div class="form-group">
         <label class="dcc-mob-tohit-label">
           <span>{{localize "DCC.Item.FIELDS.mobToHitBase.label"}}</span>
@@ -15,6 +16,7 @@
           </span>
         </label>
       </div>
+      {{/if}}
       <div class="dcc-item-flags dcc-item-wide">
         <div class="form-group">
           <label for="{{rootId}}-mob-tohit-none">{{localize "DCC.Item.FIELDS.mobToHitNone.label"}}</label>

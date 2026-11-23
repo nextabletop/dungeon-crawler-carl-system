@@ -578,6 +578,8 @@
       "ShowSectionsHint": "Hidden sections keep their items and active effects.",
       "EvadeTooltip": "Static Evade target: base + modifiers + Floor",
       "StaticToHitTooltip": "Static To-Hit target: attack base + modifiers + Floor",
+      "CrawlerAttacks": "Roll Crawler attacks",
+      "CrawlerAttacksHint": "Roll attacks using Stat modifier + Skill or Spell rank instead of a static Mob target. Damage remains a manually stored Mob value.",
       "ToHitLabel": "{target} to hit"
     },
     "Vehicle": {

@@ -206,7 +206,10 @@ export default class DCCActor extends foundry.documents.Actor {
     const rollData = use ?? d;
     if (which !== 'damage' && !Number.isFinite(rollData.toHit)) return null;
     const source = attackSource(item, this.items);
-    if (!use && (source?.type === 'spell') && (which !== 'damage')) return this.castSpell(source, cardOptions);
+    if (!use && (source?.type === 'spell') && (which !== 'damage')) {
+      const attackBonus = this.type === 'mob' && this.system.mobCrawlerAttacks ? rollData.toHit : undefined;
+      return this.castSpell(source, cardOptions, attackBonus);
+    }
     const name = use?.label ? `${item.name} (${use.label})` : item.name;
     const extras = attackCardExtras(this.system, item.system, use ? use.range : item.system.range);
     if (which === 'damage') {
@@ -259,9 +262,10 @@ export default class DCCActor extends foundry.documents.Actor {
    * chat card, the mana stays spent (the cast happened; the card is cosmetic).
    * @param {Item} item - a spell owned by this actor
    * @param {object} [options] - postCard options
+   * @param {number} [attackBonus] - Crawler Mob attack bonus when cast from an Attack
    * @returns {Promise<object|null>} null when not cast (or already casting)
    */
-  async castSpell(item, options = {}) {
+  async castSpell(item, options = {}, attackBonus) {
     if (!this.#owns(item) || (item.type !== 'spell')) return null;
     const d = item.system?.derived ?? {};
     if (!Number.isFinite(d.skillBonus)) return null;
@@ -284,7 +288,7 @@ export default class DCCActor extends foundry.documents.Actor {
         tag: checkTypeTag(item.system),
         ...spellCardExtras(this.system, item.system, grantedAttack(item, this.items)?.system),
         ...manaFields,
-      }, isPassiveCheck(item.system) ? {} : { roll: checkFormula(d.skillBonus) }, options);
+      }, isPassiveCheck(item.system) ? {} : { roll: checkFormula(attackBonus ?? d.skillBonus) }, options);
     } finally {
       this.#casting = false;
     }

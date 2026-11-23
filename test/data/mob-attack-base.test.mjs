@@ -42,6 +42,16 @@ describe('Mob Attack To-Hit base initialization', () => {
     expect(item.updateSource).not.toHaveBeenCalled();
   });
 
+  it('does not seed a static base for a Crawler Mob', async () => {
+    const { actor, item, model } = setup();
+    actor.system.mobCrawlerAttacks = true;
+    await model._preCreate({}, {}, {});
+    expect(item.updateSource).not.toHaveBeenCalled();
+    const changes = { system: { mobToHitBase: null } };
+    await model._preUpdate(changes, {}, {});
+    expect(changes.system.mobToHitBase).toBeNull();
+  });
+
   it('seeds blank bases in actor imports but preserves authored ones', async () => {
     const blank = setup();
     const authored = setup({ mobToHitBase: 0 });

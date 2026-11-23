@@ -345,6 +345,14 @@ describe('crew resolution (VehicleModel)', () => {
       await a.rollAttack(turret(a));
       expect(postCard.mock.calls[0][3].privacyOf).toBe(world['Actor.gob']);
     });
+    it('a Crawler Mob gunner rolls rather than producing a static target', async () => {
+      world['Actor.carl'] = crewActor({ type: 'mob', items: [skillItem('s1', 'Guns', 5)] });
+      world['Actor.carl'].system.mobCrawlerAttacks = true;
+      const a = vehicle({ floor: 3, crew: [{ uuid: 'Actor.carl', role: 'gunner1' }] });
+      await a.rollAttack(turret(a));
+      expect(postCard.mock.calls[0][2].roll).toBe('1d20 + 6');
+      expect(postCard.mock.calls[0][1].target).toBeUndefined();
+    });
     it('no gunner: 1d20 + weapon to-hit', async () => {
       const a = vehicle();
       await a.rollAttack(turret(a, { gunnerSlot: '' }));
@@ -447,6 +455,14 @@ describe('crew resolution (VehicleModel)', () => {
       const a = vehicle({ speed: 2, crew: [{ uuid: 'Actor.carl', role: 'passenger' }] });
       await a.rollCrewAttack(carl, 'w1');
       expect(postCard.mock.calls[0][2].roll).toBe('1d20 + 3 - 2');
+    });
+    it('Crawler Mob crew attacks roll their bonus rather than a static target', async () => {
+      const carl = crewActor({ type: 'mob', items: [weaponItem('w1', 'Foot Soldier', 10)] });
+      carl.system.mobCrawlerAttacks = true;
+      const a = vehicle({ speed: 2, floor: 3, crew: [{ uuid: 'Actor.carl', role: 'passenger' }] });
+      await a.rollCrewAttack(carl, 'w1');
+      expect(postCard.mock.calls[0][2].roll).toBe('1d20 + 10 - 2');
+      expect(postCard.mock.calls[0][1].target).toBeUndefined();
     });
     it('crew Attack extras follow vehicle settings and preserve the aboard/speed note', async () => {
       const weapon = weaponItem('w1', 'Dagger', 3);

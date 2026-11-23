@@ -168,6 +168,10 @@ export const crewAttackCard = ({ crewName, attack = {}, mob = false, vehicleName
     if (!attack.mobToHitNone) fields.target = mobToHit(hit + aboardPenalty, floor);
     return { fields, damage };
   }
+  if (attack.mobToHitNone) {
+    if (reasons.length) fields.penalty = reasons.join(', ');
+    return { fields, damage };
+  }
   if (driver) {
     fields.advantage = t('DCC.Vehicle.AdvantageChip.dis');
     reasons.push(t(`${CREW_CARD}.DriverDisadvantage`));

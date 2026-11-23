@@ -108,6 +108,12 @@ describe('rollSkill', () => {
 });
 
 describe('rollAttack', () => {
+  it('rolls a Crawler Mob attack bonus without adding Floor', async () => {
+    const mob = new DCCActor({ type: 'mob', name: 'Carl', system: { mobCrawlerAttacks: true, floor: 3 } });
+    const attack = own(mob, makeItem('attack', 'Foot Soldier', {}, { toHit: 10 }));
+    await mob.rollAttack(attack);
+    expect(postCard.mock.calls[0][2]).toEqual({ roll: '1d20 + 10' });
+  });
   it('to-hit: 1d20 + toHit', async () => {
     const actor = makeActor();
     await actor.rollAttack(own(actor, makeItem('attack', 'Dagger', { die: '1d4', damageType: 'piercing' }, { toHit: 4, damageBase: 0 })), 'toHit');
@@ -174,6 +180,18 @@ describe('rollAttack', () => {
     await actor.rollAttack(attack, 'toHit');
     expect(postCard.mock.calls[0][2]).toEqual({ roll: '1d20 + 2' });
     expect(actor.update).toHaveBeenCalledWith({ 'system.mana.value': 4 });
+  });
+  it('rolls a Crawler Mob Spell Attack bonus while spending the Spell mana', async () => {
+    const mob = new DCCActor({ type: 'mob', name: 'Elle', system: {
+      mobCrawlerAttacks: true, mana: { value: 5, max: 12 },
+    } });
+    mob.update = vi.fn(async () => mob);
+    const spell = own(mob, makeItem('spell', 'Frost Scar', { enabled: true }, { skillBonus: 4, manaCostEffective: 2 }));
+    const attack = own(mob, makeItem('attack', 'Frost Scar', { linkedItemIds: [spell.id] }, { toHit: 7 }));
+    spell.system.linkedItemIds = [attack.id];
+    await mob.rollAttack(attack, 'toHit');
+    expect(postCard.mock.calls[0][2]).toEqual({ roll: '1d20 + 7' });
+    expect(mob.update).toHaveBeenCalledWith({ 'system.mana.value': 3 });
   });
   it('an alternate Skill Use rolls its own To-Hit, name, and range', async () => {
     const actor = makeActor();

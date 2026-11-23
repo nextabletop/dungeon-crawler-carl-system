@@ -73,6 +73,7 @@ export default class CreatureModel extends foundry.abstract.TypeDataModel {
       stepBase: this.stepBase,
       surpriseBase: this.surprise,
       mobEvadeBase: this.mobEvadeBase,
+      mobCrawlerAttacks: this.mobCrawlerAttacks,
       stats: this.stats,
       manaStat: this.manaStat,
       modifiers: this._modifiers ?? [],

@@ -142,7 +142,7 @@ export default class VehicleModel extends foundry.abstract.TypeDataModel {
   resolveGunner(slot) {
     const actor = this.crewMember(crewSlotRole(slot));
     if (!actor) return { actor: null, gunner: null };
-    return { actor, gunner: { name: actor.name, cache: crewCache(actor), mob: actor.type === 'mob' } };
+    return { actor, gunner: { name: actor.name, cache: crewCache(actor), mob: actor.type === 'mob' && !actor.system.mobCrawlerAttacks } };
   }
 
   /**

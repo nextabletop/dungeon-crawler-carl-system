@@ -135,6 +135,29 @@ describe('deriveCreature — stats, health, defenses', () => {
     expect(changed.items.a.mobToHit).toBe(18);
   });
 
+  it('uses live Stat and linked Rank for Crawler Mob attack rolls, without changing Mob damage', () => {
+    const items = [
+      skill('foot', 'Foot Soldier', { rank: 6 }),
+      skill('pug', 'Pugilism', { rank: 10 }),
+      attack('a', 'Foot Soldier', { primarySkillId: 'foot', mobToHitBase: 20, damageStat: 'strength', damageBonus: 4 }),
+      attack('b', 'Pugilism', { stat: 'dexterity', primarySkillId: 'pug', mobToHitBase: 24, damageStat: 'strength', damageBonus: 4,
+        skillUses: [{ skillId: 'foot', stat: 'strength' }] }),
+      attack('none', 'Aura', { mobToHitNone: true }),
+    ];
+    const source = pc({ type: 'mob', floor: 3, mobCrawlerAttacks: true,
+      stats: stats({ strength: 16, dexterity: 11 }), items });
+    const d = deriveCreature(source);
+    expect(d.items.a).toMatchObject({ toHit: 10, damageBase: 4 });
+    expect(d.items.b).toMatchObject({ toHit: 14, damageBase: 4 });
+    expect(d.items.b.skillUses[0].toHit).toBe(10);
+    expect(d.items.none.mobToHitNone).toBe(true);
+    const changed = deriveCreature({ ...source, floor: 9, stats: stats({ strength: 20, dexterity: 11 }),
+      modifiers: [{ target: 'item:Foot Soldier:rank', value: '2' }] });
+    expect(changed.items.a.toHit).toBe(13);
+    expect(changed.items.b.toHit).toBe(14);
+    expect(deriveCreature({ ...source, mobCrawlerAttacks: false }).items.a.mobToHit).toBe(23);
+  });
+
   it('passes unresolved modifiers through as-is', () => {
     const d = deriveCreature(pc({ modifiers: [{ target: 'item:Nope:to_hit', value: '1' }] }));
     expect(d.unresolved).toHaveLength(1);

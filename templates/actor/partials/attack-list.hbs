@@ -1,6 +1,6 @@
 {{!-- Canonical Attack Items from sheetItemLists().attacks.
       PC: Rank, Stat Mod, separate To Hit and Damage actions.
-      `mob=true`: show the attack's static target or None, followed by its damage roll. --}}
+      `mob=true`: show a static target, or a Crawler attack roll when enabled. --}}
 <div class="dcc-box dcc-list dcc-list--attacks">
   <div class="dcc-bar dcc-bar--list">
     <span>{{localize "DCC.Items.Attacks"}}</span>
@@ -29,9 +29,18 @@
         <button type="button" class="dcc-iname dcc-mob-attack-name" id="{{@root.rootId}}-{{id}}-name" data-action="editItem" data-view-only data-tooltip="{{name}}">
           <span>{{name}}</span>
         </button>
+        {{#if @root.system.mobCrawlerAttacks}}
+        {{#if mobToHitNone}}<span class="dcc-mob-attack-to-hit">{{localize "DCC.None"}}</span>{{else}}
+        {{#if hasToHit}}
+        <button type="button" class="dcc-rollbtn dcc-mob-attack-to-hit" id="{{@root.rootId}}-{{id}}-rollAttack-toHit" data-action="rollAttack" data-roll="toHit"
+                data-tooltip="{{localize 'DCC.Roll.ToHit'}}">{{numberFormat toHit sign=true}}</button>
+        {{/if}}
+        {{/if}}
+        {{else}}
         <span class="dcc-mob-attack-to-hit" data-tooltip="{{localize 'DCC.Mob.StaticToHitTooltip'}}">
           {{#if mobToHitNone}}{{localize "DCC.None"}}{{else}}{{localize "DCC.Mob.ToHitLabel" target=mobToHit}}{{/if}}
         </span>
+        {{/if}}
         <span class="dcc-mob-attack-damage-range">
           <span class="dcc-c-dmg">
             {{#if noDamage}}
@@ -81,8 +90,17 @@
       </button>
       {{#if ../../mob}}
       <span class="dcc-icell">
+        {{#if @root.system.mobCrawlerAttacks}}
+        {{#if mobToHitNone}}<span>{{localize "DCC.None"}}</span>{{else}}
+        {{#if hasToHit}}
+        <button type="button" class="dcc-rollbtn" id="{{@root.rootId}}-{{attackId}}-use-{{index}}-toHit" data-action="rollAttack" data-roll="toHit"
+                data-skill-use-index="{{index}}" data-tooltip="{{#if missing}}{{localize 'DCC.ItemSheet.MissingSkill'}}{{else}}{{skillName}}{{/if}}">{{numberFormat toHit sign=true}}</button>
+        {{/if}}
+        {{/if}}
+        {{else}}
         {{#if mobToHitNone}}<span>{{localize "DCC.None"}}</span>{{else}}
         <span class="dcc-target" data-tooltip="{{localize 'DCC.Mob.StaticToHitTooltip'}}">{{mobToHit}}</span>{{/if}}
+        {{/if}}
       </span>
       {{else}}
       <span class="dcc-icell">{{rank}}</span>

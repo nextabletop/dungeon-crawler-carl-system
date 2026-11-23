@@ -34,9 +34,9 @@ const itemById = items => new Map(items.map(item => [idOf(item), item]));
 // the modifier aspect vocabulary (`to_hit`, `damage`); the output is camelCase.
 const attackRow = ({
   statModifier, damageStatModifier = 0, rank, itemBonus, itemPercent, damageModifierDice, die, damageBonus, damageType, floor,
-  hasToHit = true, mob = false, mobToHitBase, mobToHitNone = false, mobNoDamage = false,
+  hasToHit = true, mob = false, crawlerAttacks = false, mobToHitBase, mobToHitNone = false, mobNoDamage = false,
 }) => {
-  const base = mob && mobToHitBase != null ? mobToHitBase - 10 : attackToHit(statModifier, rank, 0);
+  const base = mob && !crawlerAttacks && mobToHitBase != null ? mobToHitBase - 10 : attackToHit(statModifier, rank, 0);
   const toHit = hasToHit
     ? (mob && mobToHitNone ? 0 : applyModifiers(base, itemBonus.to_hit || 0, itemPercent.to_hit || 0))
     : null;
@@ -56,7 +56,7 @@ const attackRow = ({
 // Per-item derived values for a creature (_engine.js:369-417). Returns null for
 // item types with nothing to derive (e.g. gear).
 const deriveItemRow = (item, context) => {
-  const { modifierFor, itemBonuses, itemPercents, itemDice, items, floor, type } = context;
+  const { modifierFor, itemBonuses, itemPercents, itemDice, items, floor, type, crawlerAttacks } = context;
   const id = idOf(item);
   const sys = item.system || {};
   const itemBonus = itemBonuses[id] || {};
@@ -79,11 +79,11 @@ const deriveItemRow = (item, context) => {
       : (sys.primarySkillId ? 0 : (+sys.rank || 0));
     Object.assign(row, attackRow({
       statModifier: modifierFor(sys.stat), rank, itemBonus, itemPercent,
-      hasToHit: type !== 'pc' || sys.stat !== '',
+      hasToHit: (type !== 'pc' && !crawlerAttacks) || sys.stat !== '',
       damageStatModifier: type === 'pc' && STATS.includes(sys.damageStat) ? modifierFor(sys.damageStat) : 0,
       damageModifierDice: itemDice[id]?.damage || '',
       die: sys.die, damageBonus: sys.damageBonus, damageType: sys.damageType, floor,
-      mob: type === 'mob', mobToHitBase: sys.mobToHitBase, mobToHitNone: sys.mobToHitNone, mobNoDamage: sys.mobNoDamage,
+      mob: type === 'mob', crawlerAttacks, mobToHitBase: sys.mobToHitBase, mobToHitNone: sys.mobToHitNone, mobNoDamage: sys.mobNoDamage,
     }));
     const byId = itemById(items);
     row.primarySkillId = primaryId || sys.primarySkillId || '';
@@ -99,11 +99,11 @@ const deriveItemRow = (item, context) => {
       const useStat = STATS.includes(use.stat) ? use.stat : sys.stat;
       const derived = attackRow({
         statModifier: modifierFor(useStat), rank: useRank, itemBonus, itemPercent,
-        hasToHit: type !== 'pc' || useStat !== '',
+        hasToHit: (type !== 'pc' && !crawlerAttacks) || useStat !== '',
         damageStatModifier: type === 'pc' && STATS.includes(sys.damageStat) ? modifierFor(sys.damageStat) : 0,
         damageModifierDice: itemDice[id]?.damage || '',
         die: sys.die, damageBonus: sys.damageBonus, damageType: sys.damageType, floor,
-        mob: type === 'mob', mobToHitBase: sys.mobToHitBase, mobToHitNone: sys.mobToHitNone, mobNoDamage: sys.mobNoDamage,
+        mob: type === 'mob', crawlerAttacks, mobToHitBase: sys.mobToHitBase, mobToHitNone: sys.mobToHitNone, mobNoDamage: sys.mobNoDamage,
       });
       return {
         index,
@@ -136,6 +136,7 @@ const deriveItemRow = (item, context) => {
  * @param {number} input.stepBase
  * @param {number|null} [input.surpriseBase] - Mob Surprise base; blank defaults to 10
  * @param {number|null} [input.mobEvadeBase] - Mob Evade base; blank defaults to 10
+ * @param {boolean} [input.mobCrawlerAttacks] - use Crawler attack rolls for this Mob
  * @param {Record<string,{base:number}>} input.stats
  * @param {string} [input.manaStat] - defaults to 'intelligence'
  * @param {Iterable<{target:string, value:string}>} input.modifiers - collected from active effects
@@ -205,6 +206,7 @@ export const deriveCreature = (input = {}) => {
   // Per-item values: skills/spells, then canonical Attacks.
   const context = {
     modifierFor, itemBonuses: itemBonus, itemPercents: itemPercent, itemDice, items, floor, type: input.type,
+    crawlerAttacks: input.type === 'mob' && input.mobCrawlerAttacks === true,
   };
   const itemsOut = {};
   for (const item of items) {

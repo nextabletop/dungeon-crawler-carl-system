@@ -730,7 +730,8 @@ describe('sheetItemLists', () => {
     expect(list).toMatch(/DCC.Items.Rank"[\s\S]*?DCC.Items.StatModifier"[\s\S]*?DCC.Roll.ToHit"/);
     expect(list.match(/{{rank}}<\/span>\s*<span class="dcc-icell">{{#if stat}}{{numberFormat statModifier}}/g)).toHaveLength(2);
     expect(list).not.toContain('numberFormat statModifier sign=true');
-    expect(list.match(/{{numberFormat toHit sign=true}}/g)).toHaveLength(2);
+    expect(list.match(/{{numberFormat toHit sign=true}}/g)).toHaveLength(4);
+    expect(list.match(/{{#if @root.system.mobCrawlerAttacks}}/g)).toHaveLength(2);
     expect(list).not.toContain('{{localize stat}}');
   });
   it('carries No Damage to primary and alternate rows and renders plain text', () => {

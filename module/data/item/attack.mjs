@@ -7,7 +7,7 @@ import { statModifier } from '../../rules/engine.mjs';
 
 /** Seed a blank Mob attack base without changing explicit zero or None. */
 export function seedMobAttackBase(attack, actor) {
-  if (actor?.type !== 'mob' || attack.system?.mobToHitNone || attack.system?.mobToHitBase != null) return;
+  if (actor?.type !== 'mob' || actor.system?.mobCrawlerAttacks || attack.system?.mobToHitNone || attack.system?.mobToHitBase != null) return;
   const stat = actor.system?.stats?.[attack.system?.stat];
   const modifier = Number.isFinite(stat?.modifier) ? stat.modifier : statModifier(stat?.enhancement ?? stat?.base);
   attack.updateSource({ 'system.mobToHitBase': mobAttackBase(modifier, effectiveAttackRank(attack, actor.items)) });
@@ -50,7 +50,7 @@ export default class AttackModel extends BaseItemModel {
     if ((await super._preUpdate(changes, options, user)) === false) return false;
     const actor = this.parent?.parent;
     const system = changes.system;
-    if (actor?.type !== 'mob' || !system || (!Object.hasOwn(system, 'mobToHitBase') && !Object.hasOwn(system, 'mobToHitNone'))) return;
+    if (actor?.type !== 'mob' || actor.system?.mobCrawlerAttacks || !system || (!Object.hasOwn(system, 'mobToHitBase') && !Object.hasOwn(system, 'mobToHitNone'))) return;
     const base = Object.hasOwn(system, 'mobToHitBase') ? system.mobToHitBase : this.mobToHitBase;
     if (base != null) return;
     if (system.mobToHitNone ?? this.mobToHitNone) return;

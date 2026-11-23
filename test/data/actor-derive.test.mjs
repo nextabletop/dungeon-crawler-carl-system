@@ -204,6 +204,16 @@ describe('MobModel derive wiring', () => {
     expect(items[0].system.derived.skillBonus).toBe(3);
     expect(model.parent.items).toEqual(items);
   });
+
+  it('passes Crawler Mob attack mode to the derivation engine', () => {
+    const items = [knives(), dagger()];
+    items[1].system.mobToHitBase = 99;
+    const model = prepare(MobModel, creatureSource({
+      mobCrawlerAttacks: true, floor: 3, stats: stats({ dexterity: 10 }),
+      mana: { value: 0, max: 0 },
+    }), items);
+    expect(model.parent.items[1].system.derived.toHit).toBe(6);
+  });
 });
 
 describe('custom creature Health Bars', () => {

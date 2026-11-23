@@ -130,7 +130,7 @@ export const crewAttackPost = (vehicle, crew, itemId, options) => {
   const s = vehicle.system;
   return () => {
     const { fields, roll, damage } = crewAttackCard({
-      crewName: crew.name, attack, mob: crew.type === 'mob', vehicleName: vehicle.name,
+      crewName: crew.name, attack, mob: crew.type === 'mob' && !crew.system.mobCrawlerAttacks, vehicleName: vehicle.name,
       penalty: crewPenalty(s.penaltyInputs, ''), floor: s.floor, driver: entry.role === 'driver', speed: s.speed,
     }, t);
     return postCard(crew, { ...fields, ...attackCardExtras(s, attack) }, { roll, damage }, options);

@@ -445,6 +445,9 @@ describe('crewAttackCard (R20 crewAttackRollFields)', () => {
     expect(result.fields.target).toBeUndefined();
     expect(result.roll).toBeUndefined();
     expect(result.damage).toBe('1d6 + 1');
+    const crawler = crewAttackCard({ crewName: 'Crawler', attack, mob: false, penalty: -2 }, t);
+    expect(crawler.roll).toBeUndefined();
+    expect(crawler.damage).toBe('1d6 + 1');
   });
   it('carries No Damage into Mob crew cards without suppressing their target', () => {
     const items = [{ id: 'a', type: 'attack', name: 'Aura', system: {
